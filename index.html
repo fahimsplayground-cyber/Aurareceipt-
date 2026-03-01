@@ -7,6 +7,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script>
+        // Use placeholder or actual values if needed in client-side, 
+        // though secrets are usually for server-side.
+        // For client-side apps on Replit, we often inject them or use them via an API.
+        const SUPABASE_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
     <style>
         :root { --blue: #2563eb; --gray: #64748b; }
         body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px; display: flex; flex-direction: column; align-items: center; }
@@ -155,4 +163,4 @@
     }
 </script>
 </body>
-</html>
+</html
