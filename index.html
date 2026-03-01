@@ -1,16 +1,158 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width">
-  <title>replit</title>
-  <link href="style.css" rel="stylesheet" type="text/css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Receipt Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root { --blue: #2563eb; --gray: #64748b; }
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        
+        /* The UI Container */
+        .controls { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        /* The ACTUAL Receipt Design */
+        #receipt-to-snap { 
+            width: 380px; background: white; padding: 40px 30px; 
+            color: #000; border: 1px solid #e2e8f0; position: relative;
+        }
+        .business-name { font-size: 22px; font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
+        .receipt-label { text-align: center; font-size: 12px; letter-spacing: 2px; margin-bottom: 30px; color: var(--gray); border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
+        
+        .receipt-table { width: 100%; border-collapse: collapse; font-family: 'Courier Prime', monospace; }
+        .receipt-table th { text-align: left; font-size: 12px; border-bottom: 1px solid #000; padding-bottom: 5px; }
+        .receipt-table td { padding: 8px 0; font-size: 14px; vertical-align: top; }
+        
+        .totals-area { margin-top: 20px; border-top: 1px solid #000; padding-top: 10px; text-align: right; font-family: 'Courier Prime', monospace; }
+        .final-total { font-size: 20px; font-weight: 700; margin-top: 5px; }
+
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; font-size: 14px; }
+        .btn { width: 100%; padding: 14px; cursor: pointer; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; margin-top: 10px; }
+        .btn-add { background: #f8fafc; color: var(--blue); border: 1px solid var(--blue); }
+        .btn-save { background: var(--blue); color: white; }
+        .hidden { display: none; }
+    </style>
 </head>
-
 <body>
-  Hello world
-  <script src="script.js"></script>
-</body>
 
+<div id="input-section" class="controls">
+    <h3 style="margin-top:0">Receipt Details</h3>
+    <input type="text" id="biz-name" placeholder="Your Business Name" oninput="updateReceipt()">
+    <input type="text" id="cust-name" placeholder="Customer Name" oninput="updateReceipt()">
+    
+    <div id="items-input-list">
+        <div style="display:flex; gap:5px;">
+            <input type="text" placeholder="Item" class="in-name" oninput="updateReceipt()">
+            <input type="number" placeholder="$" class="in-price" style="width:80px" oninput="updateReceipt()">
+            <input type="number" placeholder="Qty" class="in-qty" style="width:50px" value="1" oninput="updateReceipt()">
+        </div>
+    </div>
+    
+    <button class="btn btn-add" onclick="addNewInputRow()">+ Add Item</button>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+        <input type="text" id="in-coupon" placeholder="Coupon Code" oninput="updateReceipt()">
+        <input type="number" id="in-discount" placeholder="Discount %" oninput="updateReceipt()">
+    </div>
+    
+    <button class="btn btn-save" onclick="downloadReceipt()">Download Perfect Image</button>
+</div>
+
+<div id="receipt-to-snap">
+    <div class="business-name" id="out-biz">MY BUSINESS</div>
+    <div class="receipt-label">OFFICIAL SALES RECEIPT</div>
+    
+    <p style="font-size:12px; margin-bottom:20px;">
+        DATE: <span id="out-date"></span><br>
+        CUSTOMER: <span id="out-cust">CASH SALE</span>
+    </p>
+
+    <table class="receipt-table">
+        <thead>
+            <tr>
+                <th style="width:60%">ITEM</th>
+                <th style="width:10%">QTY</th>
+                <th style="text-align:right">TOTAL</th>
+            </tr>
+        </thead>
+        <tbody id="out-items">
+            </tbody>
+    </table>
+
+    <div class="totals-area">
+        <div>SUBTOTAL: $<span id="out-sub">0.00</span></div>
+        <div id="coupon-row" class="hidden">COUPON (<span id="out-code"></span>): -<span id="out-disc-val">0</span>%</div>
+        <div class="final-total">TOTAL: $<span id="out-total">0.00</span></div>
+    </div>
+    
+    <div style="margin-top:40px; text-align:center; font-size:10px; font-family:'Courier Prime';">
+        THANK YOU FOR YOUR BUSINESS!<br>
+        PLEASE VISIT US AGAIN
+    </div>
+</div>
+
+<script>
+    document.getElementById('out-date').innerText = new Date().toLocaleDateString();
+
+    function addNewInputRow() {
+        const div = document.createElement('div');
+        div.style.display = "flex"; div.style.gap = "5px";
+        div.innerHTML = `<input type="text" placeholder="Item" class="in-name" oninput="updateReceipt()">
+                         <input type="number" placeholder="$" class="in-price" style="width:80px" oninput="updateReceipt()">
+                         <input type="number" placeholder="Qty" class="in-qty" style="width:50px" value="1" oninput="updateReceipt()">`;
+        document.getElementById('items-input-list').appendChild(div);
+    }
+
+    function updateReceipt() {
+        document.getElementById('out-biz').innerText = document.getElementById('biz-name').value || "MY BUSINESS";
+        document.getElementById('out-cust').innerText = document.getElementById('cust-name').value || "CASH SALE";
+        
+        let subtotal = 0;
+        let html = '';
+        const names = document.querySelectorAll('.in-name');
+        const prices = document.querySelectorAll('.in-price');
+        const qtys = document.querySelectorAll('.in-qty');
+
+        names.forEach((n, i) => {
+            let p = parseFloat(prices[i].value) || 0;
+            let q = parseInt(qtys[i].value) || 0;
+            let rowTotal = p * q;
+            subtotal += rowTotal;
+            if(n.value) {
+                html += `<tr><td>${n.value}</td><td>${q}</td><td style="text-align:right">$${rowTotal.toFixed(2)}</td></tr>`;
+            }
+        });
+
+        const discPct = parseFloat(document.getElementById('in-discount').value) || 0;
+        const couponCode = document.getElementById('in-coupon').value;
+        const final = subtotal * (1 - (discPct/100));
+
+        document.getElementById('out-items').innerHTML = html;
+        document.getElementById('out-sub').innerText = subtotal.toFixed(2);
+        document.getElementById('out-total').innerText = final.toFixed(2);
+        
+        if(discPct > 0) {
+            document.getElementById('coupon-row').classList.remove('hidden');
+            document.getElementById('out-code').innerText = couponCode || "DISCOUNT";
+            document.getElementById('out-disc-val').innerText = discPct;
+        } else {
+            document.getElementById('coupon-row').classList.add('hidden');
+        }
+    }
+
+    function downloadReceipt() {
+        html2canvas(document.getElementById('receipt-to-snap'), {
+            scale: 3, // High resolution
+            backgroundColor: "#ffffff"
+        }).then(canvas => {
+            const link = document.createElement('a');
+            link.download = `Receipt-${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
+</script>
+</body>
 </html>
