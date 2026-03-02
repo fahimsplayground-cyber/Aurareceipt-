@@ -62,7 +62,6 @@
         }
         .nav-link:hover { padding-left: 10px; color: #3ecf8e !important; }
 
-        /* --- BENTO LAYOUT --- */
         .bento-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
         .bento-item { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 30px; position: relative; overflow: hidden; transition: 0.3s ease; }
         .controls-box { grid-column: span 5; }
@@ -70,15 +69,12 @@
         
         input { width: 100%; background: var(--glass); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text); margin-top: 10px; box-sizing: border-box; }
         
-        /* BUTTONS */
         .pill-btn { background: var(--text); color: var(--bg); border: none; padding: 12px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; transition: 0.3s; display: inline-block; text-decoration: none; text-align: center; }
         .pill-btn:hover { opacity: 0.9; transform: translateY(-2px); }
         
         .gradient-btn { background: var(--accent); color: white; border: none; }
-
         .worker-badge { font-size: 11px; background: #3ecf8e; color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 800; margin-bottom: 10px; display: inline-block; }
         
-        /* RECEIPT STYLING */
         #receipt-to-snap { width: 380px; background: white; padding: 40px 30px; color: #000; position: relative; font-family: 'Inter', sans-serif; }
         .business-name { font-size: 22px; font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
         .receipt-label { text-align: center; font-size: 11px; letter-spacing: 2px; margin-bottom: 30px; color: #64748b; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
@@ -245,9 +241,11 @@
         const code = document.getElementById('in-coupon').value;
         const { data } = await _supabase.from('coupons').select('*').eq('code', code).single();
         if (data) {
-            document.getElementById('in-discount').value = data.discount;
+            // FIXED: Using discount_percent from the database
+            const discountVal = data.discount_percent || data.discount; 
+            document.getElementById('in-discount').value = discountVal;
             document.getElementById('out-code').innerText = code;
-            document.getElementById('out-disc-val').innerText = data.discount;
+            document.getElementById('out-disc-val').innerText = discountVal;
             document.getElementById('coupon-row').classList.remove('hidden');
             updateReceipt();
         } else { alert("Invalid Code"); }
@@ -261,7 +259,6 @@
             link.href = canvas.toDataURL();
             link.click();
             
-            // SYSTEM LOG - ONLY THING ADDED
             const biz = document.getElementById('biz-name').value || "AURAMINT";
             const amt = document.getElementById('out-total').innerText;
             await _supabase.from('system_logs').insert([{ 
