@@ -15,6 +15,7 @@
             --accent: linear-gradient(90deg, #3ecf8e, #3182ce);
             --border: rgba(255, 255, 255, 0.08);
             --glass: rgba(255, 255, 255, 0.03);
+            --green: #3ecf8e;
         }
         body.light-mode {
             --bg: #fcfcfc;
@@ -28,7 +29,7 @@
 
         /* --- HEADER --- */
         header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; background: var(--bg); }
-        .brand-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .brand-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
         .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 1000; }
         .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
 
@@ -38,10 +39,13 @@
             background: var(--card); border-left: 1px solid var(--border);
             z-index: 2500; display: flex; flex-direction: column;
             padding: 60px 40px; gap: 15px; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
         .nav-overlay.active { right: 0; }
-        .close-btn { position: absolute; top: 25px; right: 30px; font-size: 35px; color: var(--sub-text); cursor: pointer; }
-        .nav-link { font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); display: block; padding: 10px 0; border: none; background: none; text-align: left; cursor: pointer; }
+        .close-btn { position: absolute; top: 25px; right: 30px; font-size: 35px; color: var(--sub-text); cursor: pointer; transition: 0.3s; line-height: 1; }
+        .close-btn:hover { color: #ff4d4d; transform: rotate(90deg); }
+        .nav-link { font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); display: block; padding: 10px 0; border: none; background: none; text-align: left; cursor: pointer; transition: 0.3s ease; }
+        .nav-link:hover { padding-left: 10px; color: var(--green) !important; }
 
         /* --- BENTO GRID --- */
         .bento-container {
@@ -70,7 +74,7 @@
         .pill-btn {
             background: var(--accent); color: white; border: none; padding: 14px 28px;
             border-radius: 100px; font-weight: 700; cursor: pointer; transition: 0.3s;
-            margin-top: 20px;
+            margin-top: 20px; width: 100%;
         }
         .pill-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(62, 207, 142, 0.3); }
 
@@ -89,12 +93,16 @@
 
 <div class="nav-overlay" id="menu-overlay">
     <div class="close-btn" onclick="toggleMenu()">&times;</div>
-    <div class="brand-logo" style="margin-bottom: 20px; cursor: default;">AURAMINT</div>
+    <div style="margin-bottom: 20px;">
+        <div class="brand-logo" onclick="location.href='index.html'">AURAMINT</div>
+        <p style="font-size: 10px; color: var(--sub-text); letter-spacing: 1px; margin-top: 5px;">WORKSTATION MENU</p>
+    </div>
     <a href="index.html" class="nav-link">Dashboard</a>
     <a href="receipts.html" class="nav-link">Receipts</a>
     <a href="coupons.html" class="nav-link">Coupons</a>
-    <a href="profilem.html" class="nav-link" style="color: #3ecf8e;">Settings</a>
-    <hr style="border:0; border-top:1px solid var(--border);">
+    <a href="profilem.html" class="nav-link" style="color: var(--green);">Profile</a>
+    <a href="logs.html" class="nav-link">System Logs</a>
+    <hr style="border:0; border-top:1px solid var(--border); margin: 15px 0;">
     <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
     <button onclick="handleLogout()" class="nav-link" style="color: #ff4d4d;">🚪 Logout</button>
 </div>
@@ -158,19 +166,14 @@
 
     function loadProfileData(user) {
         document.getElementById('user-email').value = user.email;
-        
-        // Load from LocalStorage (Simulating database profile)
         const savedName = localStorage.getItem('aura_custom_name');
         const savedBio = localStorage.getItem('aura_bio');
         const savedRole = localStorage.getItem('aura_role');
         const savedAvatar = localStorage.getItem('aura_avatar');
-
-        // Logic: if nickname is blank, use email prefix
         document.getElementById('nickname').value = savedName || "";
         document.getElementById('user-bio').value = savedBio || "";
         document.getElementById('user-role').value = savedRole || "Lead Architect";
         document.getElementById('avatar-url').value = savedAvatar || "";
-        
         updateAvatarPreview();
     }
 
@@ -184,23 +187,28 @@
         }
     }
 
-    function saveProfile() {
+    async function saveProfile() {
         const name = document.getElementById('nickname').value;
         const bio = document.getElementById('user-bio').value;
         const role = document.getElementById('user-role').value;
         const avatar = document.getElementById('avatar-url').value;
 
-        // Note: In a production app, you would use _supabase.from('profiles').upsert(...)
         localStorage.setItem('aura_custom_name', name);
         localStorage.setItem('aura_bio', bio);
         localStorage.setItem('aura_role', role);
         localStorage.setItem('aura_avatar', avatar);
 
+        // LIVE TRACKER LOGGING
+        await _supabase.from('system_logs').insert([{ 
+            type: 'profile', 
+            message: `User updated profile settings (${role})`, 
+            user_name: name || 'User'
+        }]);
+
         alert("Profile synchronized successfully.");
-        location.href = 'index.html'; // Go back to dashboard to see changes
+        location.href = 'index.html';
     }
 
-    // Standard AURAMINT UI Functions
     function toggleMenu() { document.getElementById('menu-overlay').classList.toggle('active'); }
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
@@ -212,5 +220,5 @@
     checkAuth();
 </script>
 </body>
-</html>
-
+        </html>
+    
