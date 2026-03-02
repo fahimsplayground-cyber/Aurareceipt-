@@ -48,7 +48,6 @@
         .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 2000; }
         .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
 
-        /* Slide-out Menu Overlay */
         .nav-overlay {
             position: fixed;
             top: 0; right: -100%; width: 300px; height: 100%;
@@ -95,8 +94,6 @@
         }
 
         .hidden { display: none !important; }
-        
-        /* Auth Screen */
         .auth-screen { height: 80vh; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
@@ -124,7 +121,7 @@
         <p class="sub-text" style="margin-bottom: 30px;">Access your secure workstation.</p>
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="pass" placeholder="Password">
-        <button class="pill-btn" style="width: 100%; margin-top: 25px;" onclick="handleLogin()">Continue</button>
+        <button class="pill-btn" id="login-btn" style="width: 100%; margin-top: 25px;" onclick="handleLogin()">Continue</button>
     </div>
 </div>
 
@@ -152,8 +149,9 @@
 
 <script>
     const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
+    // NEW ANON KEY APPLIED
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
-    // persistSession: true ensures login stays after closing tab
+    
     const _supabase = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true } });
 
     async function checkUser() {
@@ -166,9 +164,22 @@
     async function handleLogin() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('pass').value;
+        const btn = document.getElementById('login-btn');
+        
+        if(!email || !password) return alert("Please fill in all fields.");
+        
+        btn.innerText = "Authenticating...";
+        btn.disabled = true;
+
         const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message);
-        else showDashboard(data.user.email);
+        
+        if (error) {
+            alert(error.message);
+            btn.innerText = "Continue";
+            btn.disabled = false;
+        } else {
+            showDashboard(data.user.email);
+        }
     }
 
     function showDashboard(email) {
