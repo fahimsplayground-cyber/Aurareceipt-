@@ -4,112 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AURAMINT | Home</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* --- THEME SYSTEM --- */
         :root {
             --bg: #0f0f0f;
             --card-bg: #1a1a1a;
             --text: #e0e0e0;
-            --accent: #3ecf8e; /* Green */
+            --accent: #3ecf8e;
             --border: #333;
         }
-
         body.light-mode {
             --bg: #f0f4f8;
             --card-bg: #ffffff;
             --text: #2d3748;
-            --accent: #3182ce; /* Blue */
+            --accent: #3182ce;
             --border: #e2e8f0;
         }
-
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            transition: 0.3s;
-        }
-
-        /* --- HEADER & NAV --- */
-        header {
-            background: var(--card-bg);
-            padding: 20px;
-            text-align: center;
-            border-bottom: 2px solid var(--accent);
-        }
-
-        .brand-name {
-            font-size: 32px;
-            font-weight: bold;
-            letter-spacing: 6px;
-            color: var(--accent);
-            text-transform: uppercase;
-        }
-
-        nav {
-            margin-top: 15px;
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-        }
-
-        nav a {
-            color: var(--text);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 18px;
-            transition: 0.2s;
-        }
-
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; transition: 0.3s; }
+        header { background: var(--card-bg); padding: 20px; text-align: center; border-bottom: 2px solid var(--accent); position: relative; }
+        .brand-name { font-size: 32px; font-weight: bold; letter-spacing: 6px; color: var(--accent); text-transform: uppercase; }
+        nav { margin-top: 15px; display: flex; justify-content: center; gap: 30px; }
+        nav a { color: var(--text); text-decoration: none; font-weight: 600; font-size: 18px; transition: 0.2s; }
         nav a:hover { color: var(--accent); }
-
-        .theme-toggle {
-            position: absolute;
-            right: 20px;
-            top: 25px;
-            cursor: pointer;
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-        }
-
-        /* --- DASHBOARD CONTENT --- */
-        .container {
-            max-width: 900px;
-            margin: 60px auto;
-            text-align: center;
-        }
-
-        .welcome-text h1 { font-size: 48px; margin-bottom: 10px; }
-        .welcome-text p { font-size: 20px; color: #888; margin-bottom: 40px; }
-
-        .menu-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-        }
-
-        .menu-card {
-            background: var(--card-bg);
-            padding: 40px;
-            border-radius: 15px;
-            border: 1px solid var(--border);
-            text-decoration: none;
-            color: var(--text);
-            transition: 0.3s;
-        }
-
-        .menu-card:hover {
-            border-color: var(--accent);
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-
-        .menu-card h2 { font-size: 40px; margin: 0; }
-        .menu-card h3 { margin-top: 10px; color: var(--accent); }
+        .theme-toggle { position: absolute; right: 20px; top: 25px; cursor: pointer; background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; }
+        .container { max-width: 900px; margin: 60px auto; text-align: center; padding: 20px; }
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-top: 40px; }
+        .menu-card { background: var(--card-bg); padding: 40px; border-radius: 15px; border: 1px solid var(--border); text-decoration: none; color: var(--text); transition: 0.3s; }
+        .menu-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .auth-card { max-width: 400px; margin: 100px auto; background: var(--card-bg); padding: 40px; border-radius: 16px; border: 1px solid var(--border); }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); box-sizing: border-box; }
+        .btn-login { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -117,47 +42,77 @@
 <header>
     <div class="brand-name">AURAMINT</div>
     <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Mode</button>
-    <nav>
+    <nav id="main-nav" class="hidden">
         <a href="index.html">Home</a>
         <a href="receipts.html">Receipts</a>
         <a href="coupons.html">Coupons</a>
+        <a href="#" onclick="handleLogout()" style="color:#ff4d4d">Logout</a>
     </nav>
 </header>
 
-<div class="container">
-    <div class="welcome-text">
-        <h1>Dashboard</h1>
-        <p>Manage your business tools from one place.</p>
+<div id="login-section" class="container">
+    <div class="auth-card">
+        <h2 style="color:var(--accent)">System Access</h2>
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="pass" placeholder="Password">
+        <button class="btn-login" onclick="handleLogin()">Sign In</button>
     </div>
+</div>
 
+<div id="dashboard-section" class="container hidden">
+    <h1>Welcome, <span id="user-display">Worker</span></h1>
     <div class="menu-grid">
         <a href="receipts.html" class="menu-card">
             <h2>📄</h2>
             <h3>Receipt Generator</h3>
-            <p>Create and save new customer receipts.</p>
         </a>
-
         <a href="coupons.html" class="menu-card">
             <h2>🎟️</h2>
             <h3>Coupon Manager</h3>
-            <p>Create, track, and delete discount codes.</p>
         </a>
     </div>
 </div>
 
 <script>
+    const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
+    const supabaseClient = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: false } });
+
+    async function checkUser() {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (session) {
+            showDashboard(session.user.email);
+        }
+    }
+
+    async function handleLogin() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('pass').value;
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) alert(error.message);
+        else showDashboard(data.user.email);
+    }
+
+    function showDashboard(email) {
+        document.getElementById('login-section').classList.add('hidden');
+        document.getElementById('dashboard-section').classList.remove('hidden');
+        document.getElementById('main-nav').classList.remove('hidden');
+        document.getElementById('user-display').innerText = email;
+    }
+
+    async function handleLogout() {
+        await supabaseClient.auth.signOut();
+        location.reload();
+    }
+
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
-        // Save choice for next time
-        const isLight = document.body.classList.contains('light-mode');
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
     }
-
-    // Load saved theme on startup
-    if (localStorage.getItem('theme') === 'light') {
-        document.body.classList.add('light-mode');
-    }
+    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+    
+    checkUser();
 </script>
-
 </body>
-</html>
+    </html>
+            
