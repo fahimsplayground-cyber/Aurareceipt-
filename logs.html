@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURAMINT | Logs</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #000000;
+            --card: #0a0a0a;
+            --text: #ffffff;
+            --sub-text: #888888;
+            --accent: linear-gradient(90deg, #3ecf8e, #3182ce);
+            --border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(255, 255, 255, 0.02);
+            --red: #ff4d4d;
+            --blue: #3182ce;
+            --green: #3ecf8e;
+        }
+
+        body.light-mode {
+            --bg: #fcfcfc;
+            --card: #ffffff;
+            --text: #000000;
+            --sub-text: #666666;
+            --border: rgba(0, 0, 0, 0.08);
+            --glass: rgba(0, 0, 0, 0.01);
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+
+        /* --- HEADER --- */
+        header {
+            padding: 20px 40px; display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; background: var(--bg);
+        }
+        .brand-logo { 
+            font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer;
+            background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* --- NAV OVERLAY --- */
+        .nav-overlay {
+            position: fixed; top: 0; right: -100%; width: 320px; height: 100%;
+            background: var(--card); border-left: 1px solid var(--border);
+            z-index: 2500; display: flex; flex-direction: column;
+            padding: 60px 40px; gap: 15px; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .nav-overlay.active { right: 0; }
+        .nav-link { font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); padding: 10px 0; display: block; background: none; border: none; text-align: left; cursor: pointer; }
+
+        /* --- BENTO LOGS --- */
+        .bento-container {
+            max-width: 1200px; margin: 40px auto; padding: 0 20px;
+            display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px;
+        }
+
+        .bento-item {
+            background: var(--card); border: 1px solid var(--border); border-radius: 28px;
+            padding: 25px; display: flex; flex-direction: column;
+        }
+
+        .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .log-title { font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        /* LOG LIST STYLING */
+        .log-list { height: 300px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 13px; }
+        .log-entry { 
+            padding: 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px;
+        }
+        .log-entry:last-child { border: none; }
+        .log-meta { font-size: 11px; opacity: 0.6; display: flex; justify-content: space-between; }
+        .user-tag { color: var(--green); font-weight: bold; }
+
+        /* GRID SIZES */
+        .all-logs { grid-column: span 12; }
+        .receipt-logs { grid-column: span 6; border-left: 4px solid var(--blue); }
+        .coupon-logs { grid-column: span 6; border-left: 4px solid var(--red); }
+        .profile-logs { grid-column: span 12; border-left: 4px solid var(--green); }
+
+        .close-btn { position: absolute; top: 25px; right: 30px; font-size: 35px; cursor: pointer; }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand-logo" onclick="location.href='index.html'">AURAMINT</div>
+    <div class="menu-trigger" style="cursor:pointer" onclick="toggleMenu()">
+        <span style="display:block; width:25px; height:2px; background:var(--text); margin:5px 0;"></span>
+        <span style="display:block; width:25px; height:2px; background:var(--text); margin:5px 0;"></span>
+        <span style="display:block; width:25px; height:2px; background:var(--text); margin:5px 0;"></span>
+    </div>
+</header>
+
+<div class="nav-overlay" id="menu-overlay">
+    <div class="close-btn" onclick="toggleMenu()">&times;</div>
+    <div class="brand-logo" style="margin-bottom: 20px;">AURAMINT</div>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="receipts.html" class="nav-link">Receipts</a>
+    <a href="coupons.html" class="nav-link">Coupons</a>
+    <a href="profilem.html" class="nav-link">Profile</a>
+    <a href="logs.html" class="nav-link" style="color: #3ecf8e;">System Logs</a>
+    <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+    <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
+</div>
+
+<div class="bento-container">
+    <div class="bento-item all-logs">
+        <div class="log-header">
+            <span class="log-title">Master System Console (Combined)</span>
+            <span style="color: var(--sub-text); font-size: 12px;">Real-time feed</span>
+        </div>
+        <div class="log-list" id="all-log-list">
+            </div>
+    </div>
+
+    <div class="bento-item receipt-logs">
+        <div class="log-header">
+            <span class="log-title" style="color: var(--blue);">Receipt Transactions</span>
+        </div>
+        <div class="log-list" id="receipt-log-list"></div>
+    </div>
+
+    <div class="bento-item coupon-logs">
+        <div class="log-header">
+            <span class="log-title" style="color: var(--red);">Coupon modifications</span>
+        </div>
+        <div class="log-list" id="coupon-log-list"></div>
+    </div>
+
+    <div class="bento-item profile-logs">
+        <div class="log-header">
+            <span class="log-title" style="color: var(--green);">Identity & Profile Updates</span>
+        </div>
+        <div class="log-list" id="profile-log-list"></div>
+    </div>
+</div>
+
+<script>
+    const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
+    const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+    async function initLogs() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session) { window.location.href = 'index.html'; return; }
+
+        // Get User Identity logic
+        const storedName = localStorage.getItem('aura_custom_name');
+        const userDisplayName = storedName || session.user.email.split('@')[0];
+
+        // MOCK DATA GENERATOR (Replace with actual Supabase fetching)
+        const mockLogs = [
+            { type: 'receipt', msg: 'Generated Invoice #8829 for client "Vertex Labs"', time: '10:42 AM', user: userDisplayName },
+            { type: 'coupon', msg: 'Updated code "SUMMER20" - changed discount to 25%', time: '09:15 AM', user: userDisplayName },
+            { type: 'profile', msg: 'Updated profile picture and role to Lead Architect', time: 'Yesterday', user: userDisplayName },
+            { type: 'receipt', msg: 'Deleted draft receipt #102', time: 'Yesterday', user: userDisplayName },
+        ];
+
+        renderLogs(mockLogs);
+    }
+
+    function renderLogs(logs) {
+        const allList = document.getElementById('all-log-list');
+        const receiptList = document.getElementById('receipt-log-list');
+        const couponList = document.getElementById('coupon-log-list');
+        const profileList = document.getElementById('profile-log-list');
+
+        logs.forEach(log => {
+            const html = `
+                <div class="log-entry">
+                    <div class="log-meta">
+                        <span>[${log.time}]</span>
+                        <span class="user-tag">@${log.user}</span>
+                    </div>
+                    <div>${log.msg}</div>
+                </div>
+            `;
+            
+            allList.innerHTML += html;
+            if(log.type === 'receipt') receiptList.innerHTML += html;
+            if(log.type === 'coupon') couponList.innerHTML += html;
+            if(log.type === 'profile') profileList.innerHTML += html;
+        });
+    }
+
+    function toggleMenu() { document.getElementById('menu-overlay').classList.toggle('active'); }
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    }
+
+    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+    initLogs();
+</script>
+</body>
+  </html>
+  
