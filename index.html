@@ -14,6 +14,7 @@
             --accent: linear-gradient(90deg, #3ecf8e, #3182ce);
             --border: rgba(255, 255, 255, 0.08);
             --glass: rgba(255, 255, 255, 0.03);
+            --green: #3ecf8e;
         }
 
         body.light-mode {
@@ -43,12 +44,13 @@
         .brand-logo { 
             font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer;
             background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            display: inline-block;
         }
 
         .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 1000; }
         .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
 
-        /* --- REDESIGNED NAV OVERLAY --- */
+        /* --- NAV OVERLAY --- */
         .nav-overlay {
             position: fixed;
             top: 0; right: -100%; width: 320px; height: 100%;
@@ -76,7 +78,7 @@
             background: none; border: none; text-align: left; cursor: pointer; 
             padding: 10px 0; transition: 0.3s ease; display: block;
         }
-        .nav-link:hover { padding-left: 10px; color: #3ecf8e !important; }
+        .nav-link:hover { padding-left: 10px; color: var(--green) !important; }
 
         .nav-overlay hr { border: 0; border-top: 1px solid var(--border); margin: 15px 0; }
 
@@ -91,7 +93,7 @@
             padding: 30px; position: relative; overflow: hidden; text-decoration: none; color: inherit;
             transition: 0.3s ease;
         }
-        .bento-item:hover { transform: translateY(-5px); border-color: #3ecf8e; }
+        .bento-item:hover { transform: translateY(-5px); border-color: var(--green); }
 
         .hero-box { grid-column: span 12; grid-row: span 2; display: flex; flex-direction: column; justify-content: center; background: radial-gradient(circle at top right, rgba(62, 207, 142, 0.1), transparent); }
         .profile-box { grid-column: span 4; grid-row: span 2; }
@@ -128,13 +130,15 @@
     <div class="close-btn" onclick="toggleMenu()">&times;</div>
     
     <div style="margin-bottom: 20px;">
-        <div class="brand-logo" style="cursor: default;">AURAMINT</div>
+        <div class="brand-logo" onclick="location.href='index.html'">AURAMINT</div>
         <p style="font-size: 10px; color: var(--sub-text); letter-spacing: 1px; margin-top: 5px;">WORKSTATION MENU</p>
     </div>
 
-    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="index.html" class="nav-link" style="color: var(--green);">Dashboard</a>
     <a href="receipts.html" class="nav-link">Receipts</a>
     <a href="coupons.html" class="nav-link">Coupons</a>
+    <a href="profilem.html" class="nav-link">Profile</a>
+    <a href="logs.html" class="nav-link">System Logs</a>
     <hr>
     <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
     <button onclick="handleLogout()" class="nav-link" style="color: #ff4d4d;">🚪 Logout</button>
@@ -152,7 +156,7 @@
 
 <div id="main-dashboard" class="bento-container hidden">
     <div class="bento-item hero-box">
-        <h1 class="welcome-title">Welcome, <span id="greet-name" style="color: #3ecf8e;">User</span></h1>
+        <h1 class="welcome-title">Welcome, <span id="greet-name" style="color: var(--green);">User</span></h1>
         <p class="sub-text">Your workstation is active and synchronized.</p>
     </div>
 
@@ -209,7 +213,11 @@
 
     function saveName() {
         const val = document.getElementById('name-input').value;
-        if(val) { localStorage.setItem('aura_custom_name', val); location.reload(); }
+        if(val) { 
+            localStorage.setItem('aura_custom_name', val); 
+            location.reload(); 
+        }
+    
     }
 
     function toggleMenu() {
@@ -225,5 +233,5 @@
     checkUser();
 </script>
 </body>
-            </html>
-                                               
+    </html>
+    
