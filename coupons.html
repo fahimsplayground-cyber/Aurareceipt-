@@ -15,6 +15,7 @@
             --accent: linear-gradient(90deg, #3ecf8e, #3182ce);
             --border: rgba(255, 255, 255, 0.08);
             --glass: rgba(255, 255, 255, 0.03);
+            --green: #3ecf8e;
         }
         body.light-mode {
             --bg: #fcfcfc;
@@ -28,12 +29,12 @@
         
         /* --- HEADER --- */
         header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; background: var(--bg); }
-        .brand-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .brand-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: inline-block; }
         
         .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 1000; }
         .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
         
-        /* --- REDESIGNED NAV OVERLAY --- */
+        /* --- NAV OVERLAY --- */
         .nav-overlay {
             position: fixed;
             top: 0; right: -100%; width: 320px; height: 100%;
@@ -61,7 +62,7 @@
             background: none; border: none; text-align: left; cursor: pointer; 
             padding: 10px 0; transition: 0.3s ease; display: block;
         }
-        .nav-link:hover { padding-left: 10px; color: #3ecf8e !important; }
+        .nav-link:hover { padding-left: 10px; color: var(--green) !important; }
 
         .nav-overlay hr { border: 0; border-top: 1px solid var(--border); margin: 15px 0; }
 
@@ -75,7 +76,6 @@
         input, select { width: 100%; background: var(--glass); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text); margin-top: 8px; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         label { font-size: 11px; font-weight: 800; color: #3ecf8e; text-transform: uppercase; display: block; margin-top: 15px; letter-spacing: 1px; }
 
-        /* Updated Gradient Button */
         .pill-btn { background: var(--accent); color: white; border: none; padding: 14px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 25px; }
         .pill-btn:hover { opacity: 0.8; transform: translateY(-2px); }
         
@@ -106,12 +106,14 @@
 <div class="nav-overlay" id="menu-overlay">
     <div class="close-btn" onclick="toggleMenu()">&times;</div>
     <div style="margin-bottom: 20px;">
-        <div class="brand-logo" style="cursor: default;">AURAMINT</div>
+        <div class="brand-logo" onclick="location.href='index.html'">AURAMINT</div>
         <p style="font-size: 10px; color: var(--sub-text); letter-spacing: 1px; margin-top: 5px;">WORKSTATION MENU</p>
     </div>
     <a href="index.html" class="nav-link">Dashboard</a>
     <a href="receipts.html" class="nav-link">Receipts</a>
-    <a href="coupons.html" class="nav-link">Coupons</a>
+    <a href="coupons.html" class="nav-link" style="color: var(--green);">Coupons</a>
+    <a href="profilem.html" class="nav-link">Profile</a>
+    <a href="logs.html" class="nav-link">System Logs</a>
     <hr>
     <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
     <button onclick="handleLogout()" class="nav-link" style="color: #ff4d4d;">🚪 Logout</button>
@@ -184,10 +186,17 @@
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
     const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
+    let currentUser = "";
+
     async function checkAuth() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (!session) window.location.href = 'index.html';
-        else { document.getElementById('main-app').classList.remove('hidden'); loadCoupons(); }
+        else { 
+            const stored = localStorage.getItem('aura_custom_name');
+            currentUser = stored || session.user.email.split('@')[0];
+            document.getElementById('main-app').classList.remove('hidden'); 
+            loadCoupons(); 
+        }
     }
 
     async function loadCoupons() {
@@ -216,7 +225,7 @@
                     <td>
                         <div style="display:flex; gap:5px;">
                             <button class="action-btn" onclick='prepareEdit(${JSON.stringify(c)})'>Edit</button>
-                            <button class="action-btn" style="color:#ff4d4d; border-color:rgba(255,77,77,0.2)" onclick="deleteCoupon('${c.id}')">Del</button>
+                            <button class="action-btn" style="color:#ff4d4d; border-color:rgba(255,77,77,0.2)" onclick="deleteCoupon('${c.id}', '${c.code}')">Del</button>
                         </div>
                     </td>
                 </tr>`;
@@ -239,12 +248,18 @@
         let res;
         if (id) {
             res = await _supabase.from('coupons').update(payload).eq('id', id);
+            if (!res.error) await createLog('coupon', `Updated Coupon: ${payload.code} (${payload.discount_percent}%)`);
         } else {
             res = await _supabase.from('coupons').insert([payload]);
+            if (!res.error) await createLog('coupon', `Created New Coupon: ${payload.code} (${payload.discount_percent}%)`);
         }
 
         if (res.error) alert("Database Error: " + res.error.message);
         else { resetForm(); loadCoupons(); }
+    }
+
+    async function createLog(type, message) {
+        await _supabase.from('system_logs').insert([{ type, message, user_name: currentUser }]);
     }
 
     function prepareEdit(c) {
@@ -274,10 +289,13 @@
         document.getElementById('submit-btn').innerText = "Save";
     }
 
-    async function deleteCoupon(id) {
+    async function deleteCoupon(id, code) {
         if(confirm("Confirm permanent deletion?")) {
-            await _supabase.from('coupons').delete().eq('id', id);
-            loadCoupons();
+            const { error } = await _supabase.from('coupons').delete().eq('id', id);
+            if(!error) {
+                await createLog('coupon', `Deleted Coupon: ${code}`);
+                loadCoupons();
+            }
         }
     }
 
