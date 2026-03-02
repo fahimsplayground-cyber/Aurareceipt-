@@ -44,7 +44,6 @@
         .brand-logo { 
             font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer;
             background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            display: inline-block;
         }
 
         .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 1000; }
@@ -130,7 +129,7 @@
     <div class="close-btn" onclick="toggleMenu()">&times;</div>
     
     <div style="margin-bottom: 20px;">
-        <div class="brand-logo" onclick="location.href='index.html'">AURAMINT</div>
+        <div class="brand-logo">AURAMINT</div>
         <p style="font-size: 10px; color: var(--sub-text); letter-spacing: 1px; margin-top: 5px;">WORKSTATION MENU</p>
     </div>
 
@@ -161,10 +160,10 @@
     </div>
 
     <div class="bento-item profile-box">
-        <h3 style="margin:0">Profile Settings</h3>
-        <p class="sub-text" style="font-size: 14px;">Update your public display name.</p>
+        <h3 style="margin:0">Quick Profile Update</h3>
+        <p class="sub-text" style="font-size: 14px;">This will be recorded in system logs.</p>
         <input type="text" id="name-input" placeholder="Enter Full Name">
-        <button class="pill-btn" style="margin-top: 15px; font-size: 12px;" onclick="saveName()">Save Changes</button>
+        <button class="pill-btn" id="save-name-btn" style="margin-top: 15px; font-size: 12px;" onclick="saveName()">Save Changes</button>
     </div>
 
     <a href="receipts.html" class="bento-item tool-box">
@@ -187,6 +186,18 @@
         if (session) { showDashboard(session.user.email); }
     }
 
+    async function createLog(type, message) {
+        const { data: { session } } = await _supabase.auth.getSession();
+        const storedName = localStorage.getItem('aura_custom_name');
+        const user = storedName || (session ? session.user.email.split('@')[0] : "System");
+        
+        await _supabase.from('system_logs').insert([{
+            type: type,
+            message: message,
+            user_name: user
+        }]);
+    }
+
     async function handleLogin() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('pass').value;
@@ -199,7 +210,10 @@
             alert(error.message);
             btn.innerText = "Continue";
             btn.disabled = false;
-        } else { showDashboard(data.user.email); }
+        } else { 
+            await createLog('profile', 'User logged into the dashboard');
+            showDashboard(data.user.email); 
+        }
     }
 
     function showDashboard(email) {
@@ -209,21 +223,24 @@
         document.getElementById('greet-name').innerText = stored || email.split('@')[0];
     }
 
-    async function handleLogout() { await _supabase.auth.signOut(); location.reload(); }
+    async function handleLogout() { 
+        await createLog('profile', 'User logged out');
+        await _supabase.auth.signOut(); 
+        location.reload(); 
+    }
 
-    function saveName() {
+    async function saveName() {
         const val = document.getElementById('name-input').value;
+        const btn = document.getElementById('save-name-btn');
         if(val) { 
+            btn.innerText = "Saving...";
             localStorage.setItem('aura_custom_name', val); 
+            await createLog('profile', `Updated display name to: ${val}`);
             location.reload(); 
         }
-    
     }
 
-    function toggleMenu() {
-        document.getElementById('menu-overlay').classList.toggle('active');
-    }
-
+    function toggleMenu() { document.getElementById('menu-overlay').classList.toggle('active'); }
     function toggleTheme() {
         document.body.classList.toggle('light-mode');
         localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
