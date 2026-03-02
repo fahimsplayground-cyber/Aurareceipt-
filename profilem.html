@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURAMINT | Profile Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #000000;
+            --card: #0a0a0a;
+            --text: #ffffff;
+            --sub-text: #888888;
+            --accent: linear-gradient(90deg, #3ecf8e, #3182ce);
+            --border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+        body.light-mode {
+            --bg: #fcfcfc;
+            --card: #ffffff;
+            --text: #000000;
+            --sub-text: #666666;
+            --border: rgba(0, 0, 0, 0.08);
+            --glass: rgba(0, 0, 0, 0.02);
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+
+        /* --- HEADER --- */
+        header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; background: var(--bg); }
+        .brand-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 1000; }
+        .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
+
+        /* --- NAV OVERLAY --- */
+        .nav-overlay {
+            position: fixed; top: 0; right: -100%; width: 320px; height: 100%;
+            background: var(--card); border-left: 1px solid var(--border);
+            z-index: 2500; display: flex; flex-direction: column;
+            padding: 60px 40px; gap: 15px; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .nav-overlay.active { right: 0; }
+        .close-btn { position: absolute; top: 25px; right: 30px; font-size: 35px; color: var(--sub-text); cursor: pointer; }
+        .nav-link { font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); display: block; padding: 10px 0; border: none; background: none; text-align: left; cursor: pointer; }
+
+        /* --- BENTO GRID --- */
+        .bento-container {
+            max-width: 1200px; margin: 40px auto; padding: 0 20px;
+            display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px;
+        }
+        .bento-item { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 30px; position: relative; }
+        
+        .avatar-box { grid-column: span 4; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .details-box { grid-column: span 8; }
+        .bio-box { grid-column: span 12; }
+
+        /* --- UI ELEMENTS --- */
+        .avatar-preview {
+            width: 120px; height: 120px; border-radius: 50%; background: var(--glass);
+            border: 2px solid #3ecf8e; margin-bottom: 20px; object-fit: cover;
+            display: flex; align-items: center; justify-content: center; font-size: 40px;
+        }
+        input, select, textarea {
+            width: 100%; background: var(--glass); border: 1px solid var(--border);
+            padding: 15px; border-radius: 15px; color: var(--text); margin-top: 10px;
+            font-family: inherit; box-sizing: border-box;
+        }
+        label { font-size: 11px; font-weight: 800; color: #3ecf8e; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .pill-btn {
+            background: var(--accent); color: white; border: none; padding: 14px 28px;
+            border-radius: 100px; font-weight: 700; cursor: pointer; transition: 0.3s;
+            margin-top: 20px;
+        }
+        .pill-btn:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(62, 207, 142, 0.3); }
+
+        .hidden { display: none !important; }
+        @media (max-width: 850px) { .avatar-box, .details-box { grid-column: span 12; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand-logo" onclick="location.href='index.html'">AURAMINT</div>
+    <div class="menu-trigger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+    </div>
+</header>
+
+<div class="nav-overlay" id="menu-overlay">
+    <div class="close-btn" onclick="toggleMenu()">&times;</div>
+    <div class="brand-logo" style="margin-bottom: 20px; cursor: default;">AURAMINT</div>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="receipts.html" class="nav-link">Receipts</a>
+    <a href="coupons.html" class="nav-link">Coupons</a>
+    <a href="profilem.html" class="nav-link" style="color: #3ecf8e;">Settings</a>
+    <hr style="border:0; border-top:1px solid var(--border);">
+    <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
+    <button onclick="handleLogout()" class="nav-link" style="color: #ff4d4d;">🚪 Logout</button>
+</div>
+
+<div id="main-app" class="bento-container hidden">
+    <div class="bento-item avatar-box">
+        <div id="avatar-container" class="avatar-preview">👤</div>
+        <label>Profile Picture URL</label>
+        <input type="text" id="avatar-url" placeholder="Paste image link..." oninput="updateAvatarPreview()">
+        <p class="sub-text" style="font-size: 12px; margin-top: 10px; color: var(--sub-text);">Visual identification for your workstation.</p>
+    </div>
+
+    <div class="bento-item details-box">
+        <div style="background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; font-size: 12px; margin-bottom: 10px;">IDENTITY SETTINGS</div>
+        <h2 style="margin: 0 0 20px 0;">User Credentials</h2>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+                <label>Nickname</label>
+                <input type="text" id="nickname" placeholder="Your display name">
+            </div>
+            <div>
+                <label>Workstation Role</label>
+                <select id="user-role">
+                    <option value="Lead Architect">Lead Architect</option>
+                    <option value="System Admin">System Admin</option>
+                    <option value="Senior Editor">Senior Editor</option>
+                    <option value="Analyst">Analyst</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px;">
+            <label>Registered Email</label>
+            <input type="text" id="user-email" disabled style="opacity: 0.5; cursor: not-allowed;">
+        </div>
+
+        <button class="pill-btn" onclick="saveProfile()">Update Profile</button>
+    </div>
+
+    <div class="bento-item bio-box">
+        <label>Professional Bio</label>
+        <textarea id="user-bio" rows="4" placeholder="Tell us about your role at AURAMINT..."></textarea>
+    </div>
+</div>
+
+<script>
+    const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
+    const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+    async function checkAuth() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session) {
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('main-app').classList.remove('hidden');
+            loadProfileData(session.user);
+        }
+    }
+
+    function loadProfileData(user) {
+        document.getElementById('user-email').value = user.email;
+        
+        // Load from LocalStorage (Simulating database profile)
+        const savedName = localStorage.getItem('aura_custom_name');
+        const savedBio = localStorage.getItem('aura_bio');
+        const savedRole = localStorage.getItem('aura_role');
+        const savedAvatar = localStorage.getItem('aura_avatar');
+
+        // Logic: if nickname is blank, use email prefix
+        document.getElementById('nickname').value = savedName || "";
+        document.getElementById('user-bio').value = savedBio || "";
+        document.getElementById('user-role').value = savedRole || "Lead Architect";
+        document.getElementById('avatar-url').value = savedAvatar || "";
+        
+        updateAvatarPreview();
+    }
+
+    function updateAvatarPreview() {
+        const url = document.getElementById('avatar-url').value;
+        const container = document.getElementById('avatar-container');
+        if (url) {
+            container.innerHTML = `<img src="${url}" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
+        } else {
+            container.innerHTML = `👤`;
+        }
+    }
+
+    function saveProfile() {
+        const name = document.getElementById('nickname').value;
+        const bio = document.getElementById('user-bio').value;
+        const role = document.getElementById('user-role').value;
+        const avatar = document.getElementById('avatar-url').value;
+
+        // Note: In a production app, you would use _supabase.from('profiles').upsert(...)
+        localStorage.setItem('aura_custom_name', name);
+        localStorage.setItem('aura_bio', bio);
+        localStorage.setItem('aura_role', role);
+        localStorage.setItem('aura_avatar', avatar);
+
+        alert("Profile synchronized successfully.");
+        location.href = 'index.html'; // Go back to dashboard to see changes
+    }
+
+    // Standard AURAMINT UI Functions
+    function toggleMenu() { document.getElementById('menu-overlay').classList.toggle('active'); }
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    }
+    async function handleLogout() { await _supabase.auth.signOut(); location.reload(); }
+
+    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+    checkAuth();
+</script>
+</body>
+</html>
+
