@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +17,6 @@
             --accent: linear-gradient(90deg, #3ecf8e, #3182ce);
             --border: rgba(255, 255, 255, 0.08);
             --glass: rgba(255, 255, 255, 0.03);
-            --green: #3ecf8e;
         }
         body.light-mode {
             --bg: #fcfcfc;
@@ -28,47 +28,60 @@
         }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
         
-        /* --- HEADER --- */
+        /* --- HEADER & NAV --- */
         header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; background: var(--bg); }
-        .brand-logo { 
-            font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; 
-            background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            display: inline-block;
-        }
-
-        /* --- NAV OVERLAY --- */
+        .brand-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 1000; }
+        .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
+        
         .nav-overlay {
-            position: fixed; top: 0; right: -100%; width: 320px; height: 100%;
+            position: fixed;
+            top: 0; right: -100%; width: 320px; height: 100%;
             background: var(--card); border-left: 1px solid var(--border);
             z-index: 2500; display: flex; flex-direction: column;
             padding: 60px 40px; gap: 15px; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
             box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
         .nav-overlay.active { right: 0; }
-        .close-btn { position: absolute; top: 25px; right: 30px; font-size: 35px; color: var(--sub-text); cursor: pointer; transition: 0.3s; line-height: 1; }
+        
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            font-size: 35px;
+            color: var(--sub-text);
+            cursor: pointer;
+            transition: 0.3s;
+            line-height: 1;
+        }
         .close-btn:hover { color: #ff4d4d; transform: rotate(90deg); }
         
-        .nav-link { font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); padding: 10px 0; display: block; transition: 0.3s; background:none; border:none; text-align:left; cursor:pointer;}
-        .nav-link:hover { padding-left: 10px; color: var(--green) !important; }
+        .nav-link { 
+            font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); 
+            background: none; border: none; text-align: left; cursor: pointer; 
+            padding: 10px 0; transition: 0.3s ease; display: block;
+        }
+        .nav-link:hover { padding-left: 10px; color: #3ecf8e !important; }
 
         /* --- BENTO LAYOUT --- */
         .bento-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
-        .bento-item { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 30px; position: relative; transition: 0.3s ease; }
+        .bento-item { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 30px; position: relative; overflow: hidden; transition: 0.3s ease; }
         .controls-box { grid-column: span 5; }
-        .preview-box { grid-column: span 7; display: flex; justify-content: center; align-items: flex-start; background: var(--glass); overflow-y: auto; padding-top: 50px; }
+        .preview-box { grid-column: span 7; display: flex; justify-content: center; align-items: flex-start; background: var(--glass); }
         
-        input { width: 100%; background: var(--glass); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text); margin-top: 10px; box-sizing: border-box; outline: none; transition: 0.2s; }
-        input:focus { border-color: var(--green); }
+        input { width: 100%; background: var(--glass); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text); margin-top: 10px; box-sizing: border-box; }
         
-        .pill-btn { background: var(--text); color: var(--bg); border: none; padding: 12px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; transition: 0.3s; display: inline-block; text-align: center; width: 100%; }
+        /* BUTTONS */
+        .pill-btn { background: var(--text); color: var(--bg); border: none; padding: 12px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; transition: 0.3s; display: inline-block; text-decoration: none; text-align: center; }
         .pill-btn:hover { opacity: 0.9; transform: translateY(-2px); }
-        .gradient-btn { background: var(--accent); color: white; }
-
-        .worker-badge { font-size: 11px; background: var(--green); color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 800; margin-bottom: 10px; display: inline-block; }
         
-        /* --- RECEIPT DESIGN --- */
-        #receipt-to-snap { width: 380px; background: white; padding: 40px 30px; color: #000; font-family: 'Inter', sans-serif; box-shadow: 0 30px 60px rgba(0,0,0,0.3); }
-        .business-name { font-size: 22px; font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 5px; color: #000; }
+        .gradient-btn { background: var(--accent); color: white; border: none; }
+
+        .worker-badge { font-size: 11px; background: #3ecf8e; color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 800; margin-bottom: 10px; display: inline-block; }
+        
+        /* RECEIPT STYLING */
+        #receipt-to-snap { width: 380px; background: white; padding: 40px 30px; color: #000; position: relative; font-family: 'Inter', sans-serif; }
+        .business-name { font-size: 22px; font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
         .receipt-label { text-align: center; font-size: 11px; letter-spacing: 2px; margin-bottom: 30px; color: #64748b; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
         .receipt-table { width: 100%; border-collapse: collapse; font-family: 'Courier Prime', monospace; }
         .receipt-table th { text-align: left; font-size: 12px; border-bottom: 1px solid #000; padding-bottom: 5px; }
@@ -78,73 +91,68 @@
         
         .hidden { display: none !important; }
         .auth-screen { height: 80vh; display: flex; align-items: center; justify-content: center; }
+        @media (max-width: 900px) { .controls-box, .preview-box { grid-column: span 12; } }
     </style>
 </head>
 <body>
 
 <header>
     <div class="brand-logo" onclick="location.href='index.html'">AURAMINT</div>
-    <div class="menu-trigger" onclick="toggleMenu()" style="cursor: pointer;">
-        <span style="display:block; width:25px; height:2px; background:var(--text); margin:5px 0;"></span>
-        <span style="display:block; width:25px; height:2px; background:var(--text); margin:5px 0;"></span>
-        <span style="display:block; width:25px; height:2px; background:var(--text); margin:5px 0;"></span>
+    <div class="menu-trigger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
     </div>
 </header>
 
 <div class="nav-overlay" id="menu-overlay">
     <div class="close-btn" onclick="toggleMenu()">&times;</div>
     <div style="margin-bottom: 20px;">
-        <div class="brand-logo">AURAMINT</div>
+        <div class="brand-logo" style="cursor: default;">AURAMINT</div>
         <p style="font-size: 10px; color: var(--sub-text); letter-spacing: 1px; margin-top: 5px;">WORKSTATION MENU</p>
     </div>
     <a href="index.html" class="nav-link">Dashboard</a>
-    <a href="receipts.html" class="nav-link" style="color: var(--green);">Receipts</a>
+    <a href="receipts.html" class="nav-link">Receipts</a>
     <a href="coupons.html" class="nav-link">Coupons</a>
-    <a href="profilem.html" class="nav-link">Profile</a>
-    <a href="logs.html" class="nav-link">System Logs</a>
-    <hr style="border:0; border-top:1px solid var(--border); margin: 10px 0;">
+    <hr style="border:0; border-top:1px solid var(--border); width:100%;">
     <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
     <button onclick="handleLogout()" class="nav-link" style="color: #ff4d4d;">🚪 Logout</button>
 </div>
 
 <div id="auth-section" class="auth-screen">
     <div style="width: 100%; max-width: 400px; padding: 40px; background: var(--card); border-radius: 30px; border: 1px solid var(--border);">
-        <h2 style="margin: 0 0 10px 0;">Sign In</h2>
-        <p style="color:var(--sub-text); margin-bottom: 30px;">Authorized Terminal Access.</p>
+        <h2 style="margin: 0 0 10px 0;">Worker Sign In</h2>
+        <p style="color:var(--sub-text); margin-bottom: 30px;">Authorized Access Only.</p>
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
-        <button class="pill-btn gradient-btn" id="login-btn" style="margin-top:20px;" onclick="handleLogin()">Continue</button>
+        <button class="pill-btn gradient-btn" id="login-btn" style="width: 100%;" onclick="handleLogin()">Continue</button>
     </div>
 </div>
 
 <div id="main-app" class="bento-container hidden">
     <div class="bento-item controls-box">
         <span class="worker-badge" id="logged-in-user">Worker</span>
-        <h3 style="margin: 10px 0; font-size: 24px;">Receipt Data</h3>
+        <h3 style="margin: 10px 0; font-size: 24px; color: #000;">Receipt Data</h3>
         
         <input type="text" id="biz-name" placeholder="Business Name" oninput="updateReceipt()">
         <input type="text" id="cust-name" placeholder="Customer Name" oninput="updateReceipt()">
         
-        <div id="items-input-list" style="margin-top: 15px;">
-            <div style="display:flex; gap:8px;">
+        <div id="items-input-list" style="margin-top: 10px;">
+            <div style="display:flex; gap:5px;">
                 <input type="text" placeholder="Item" class="in-name" oninput="updateReceipt()">
                 <input type="number" placeholder="Price" class="in-price" style="width:100px" oninput="updateReceipt()">
                 <input type="number" placeholder="Qty" class="in-qty" style="width:60px" value="1" oninput="updateReceipt()">
             </div>
         </div>
         
-        <button class="pill-btn" style="font-size:12px; margin-top:12px; background: var(--glass); color: var(--text); border: 1px solid var(--border);" onclick="addNewInputRow()">+ Add Item</button>
+        <button class="pill-btn gradient-btn" style="font-size:12px; margin-top:10px;" onclick="addNewInputRow()">+ Add Item</button>
         
         <div style="margin-top:25px; padding: 20px; background: var(--glass); border-radius: 18px; border: 1px solid var(--border);">
-            <p style="margin:0 0 10px 0; font-size: 11px; font-weight: 800; color: var(--green); letter-spacing: 1px;">PROMOTION</p>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="in-coupon" placeholder="Coupon Code" style="margin:0">
-                <button class="pill-btn gradient-btn" id="verify-btn" style="width: 80px;" onclick="verifyCoupon()">Apply</button>
-            </div>
+            <p style="margin:0 0 10px 0; font-size: 12px; font-weight: 800; color: #3ecf8e;">PROMOTION</p>
+            <input type="text" id="in-coupon" placeholder="Coupon Code">
+            <button class="pill-btn gradient-btn" id="verify-btn" style="font-size: 11px; padding: 8px 16px; margin-top: 10px;" onclick="verifyCoupon()">Apply</button>
             <input type="hidden" id="in-discount" value="0">
         </div>
         
-        <button class="pill-btn gradient-btn" id="save-btn" style="margin-top: 25px;" onclick="saveAndDownload()">Save & Download PNG</button>
+        <button class="pill-btn gradient-btn" id="save-btn" style="width: 100%; margin-top: 20px;" onclick="saveAndDownload()">Save & Download PNG</button>
     </div>
 
     <div class="bento-item preview-box">
@@ -164,133 +172,7 @@
                 <div id="coupon-row" class="hidden" style="color: #ef4444;">DISCOUNT (<span id="out-code"></span>): -<span id="out-disc-val">0</span>%</div>
                 <div class="final-total">TOTAL: ৳<span id="out-total">0.00</span></div>
             </div>
-            <div style="margin-top:40px; text-align:center; font-size:10px; color:#94a3b8; font-family: 'Courier Prime';">THANK YOU FOR YOUR BUSINESS</div>
-        </div>
-    </div>
-</div>
+            <div style="margin-top:40px; text-align:center; font-size:10px;
 
-<script>
-    const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
-    const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
-    let currentUser = "";
 
-    async function checkSession() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (session) {
-            setupApp(session.user.email);
-        }
-    }
-
-    async function handleLogin() {
-        const email = document.getElementById('login-email').value;
-        const pass = document.getElementById('login-pass').value;
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password: pass });
-        if (error) alert(error.message);
-        else setupApp(data.user.email);
-    }
-
-    function setupApp(email) {
-        document.getElementById('auth-section').classList.add('hidden');
-        document.getElementById('main-app').classList.remove('hidden');
-        const stored = localStorage.getItem('aura_custom_name');
-        currentUser = stored || email.split('@')[0];
-        document.getElementById('logged-in-user').innerText = "@" + currentUser;
-        document.getElementById('out-date').innerText = new Date().toLocaleDateString();
-        updateReceipt();
-    }
-
-    async function handleLogout() { await _supabase.auth.signOut(); location.reload(); }
-
-    function addNewInputRow() {
-        const container = document.getElementById('items-input-list');
-        const row = document.createElement('div');
-        row.style.display = "flex";
-        row.style.gap = "8px";
-        row.style.marginTop = "8px";
-        row.innerHTML = `<input type="text" placeholder="Item" class="in-name" oninput="updateReceipt()"><input type="number" placeholder="Price" class="in-price" style="width:100px" oninput="updateReceipt()"><input type="number" placeholder="Qty" class="in-qty" style="width:60px" value="1" oninput="updateReceipt()">`;
-        container.appendChild(row);
-    }
-
-    function updateReceipt() {
-        document.getElementById('out-biz').innerText = document.getElementById('biz-name').value || "AURAMINT";
-        document.getElementById('out-cust').innerText = document.getElementById('cust-name').value || "CASH SALE";
-        
-        let subtotal = 0;
-        const names = document.querySelectorAll('.in-name');
-        const prices = document.querySelectorAll('.in-price');
-        const qtys = document.querySelectorAll('.in-qty');
-        const tableBody = document.getElementById('out-items');
-        tableBody.innerHTML = "";
-
-        names.forEach((nameInput, i) => {
-            const name = nameInput.value;
-            const price = parseFloat(prices[i].value) || 0;
-            const qty = parseInt(qtys[i].value) || 0;
-            if(name || price) {
-                const total = price * qty;
-                subtotal += total;
-                tableBody.innerHTML += `<tr><td>${name || 'Item'}</td><td>${qty}</td><td style="text-align:right">৳${total.toFixed(2)}</td></tr>`;
-            }
-        });
-
-        const discountPercent = parseFloat(document.getElementById('in-discount').value) || 0;
-        const discountVal = (subtotal * discountPercent) / 100;
-        const finalTotal = subtotal - discountVal;
-
-        document.getElementById('out-sub').innerText = subtotal.toFixed(2);
-        document.getElementById('out-total').innerText = finalTotal.toFixed(2);
-    }
-
-    async function verifyCoupon() {
-        const code = document.getElementById('in-coupon').value;
-        const { data, error } = await _supabase.from('coupons').select('*').eq('code', code).single();
-        if (data) {
-            document.getElementById('in-discount').value = data.discount;
-            document.getElementById('out-code').innerText = code;
-            document.getElementById('out-disc-val').innerText = data.discount;
-            document.getElementById('coupon-row').classList.remove('hidden');
-            updateReceipt();
-            alert("Coupon Applied!");
-        } else {
-            alert("Invalid Code");
-        }
-    }
-
-    async function saveAndDownload() {
-        const btn = document.getElementById('save-btn');
-        btn.innerText = "Processing...";
-        const element = document.getElementById('receipt-to-snap');
-        
-        html2canvas(element, { scale: 3 }).then(async canvas => {
-            const link = document.createElement('a');
-            link.download = `AURAMINT_Receipt_${Date.now()}.png`;
-            link.href = canvas.toDataURL();
-            link.click();
-            
-            // LOG TO SUPABASE
-            const biz = document.getElementById('biz-name').value || "AURAMINT";
-            const total = document.getElementById('out-total').innerText;
-            await createLog('receipt', `Generated Receipt for ${biz} - Total: ৳${total}`);
-            
-            btn.innerText = "Save & Download PNG";
-        });
-    }
-
-    async function createLog(type, message) {
-        await _supabase.from('system_logs').insert([{ type, message, user_name: currentUser }]);
-    }
-
-    function toggleMenu() { document.getElementById('menu-overlay').classList.toggle('active'); }
-    function toggleTheme() {
-        document.body.classList.toggle('light-mode');
-        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
-    }
-
-    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
-    checkSession();
-</script>
-</body>
-        </html>
-        
