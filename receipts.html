@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,12 +105,14 @@
 <div class="nav-overlay" id="menu-overlay">
     <div class="close-btn" onclick="toggleMenu()">&times;</div>
     <div style="margin-bottom: 20px;">
-        <div class="brand-logo" style="cursor: default;">AURAMINT</div>
+        <div class="brand-logo" onclick="location.href='index.html'">AURAMINT</div>
         <p style="font-size: 10px; color: var(--sub-text); letter-spacing: 1px; margin-top: 5px;">WORKSTATION MENU</p>
     </div>
     <a href="index.html" class="nav-link">Dashboard</a>
-    <a href="receipts.html" class="nav-link">Receipts</a>
+    <a href="receipts.html" class="nav-link" style="color: #3ecf8e;">Receipts</a>
     <a href="coupons.html" class="nav-link">Coupons</a>
+    <a href="profilem.html" class="nav-link">Profile</a>
+    <a href="logs.html" class="nav-link">System Logs</a>
     <hr style="border:0; border-top:1px solid var(--border); width:100%;">
     <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
     <button onclick="handleLogout()" class="nav-link" style="color: #ff4d4d;">🚪 Logout</button>
@@ -172,7 +173,113 @@
                 <div id="coupon-row" class="hidden" style="color: #ef4444;">DISCOUNT (<span id="out-code"></span>): -<span id="out-disc-val">0</span>%</div>
                 <div class="final-total">TOTAL: ৳<span id="out-total">0.00</span></div>
             </div>
-            <div style="margin-top:40px; text-align:center; font-size:10px;
+            <div style="margin-top:40px; text-align:center; font-size:10px; color:#94a3b8; font-family: 'Courier Prime';">THANK YOU FOR YOUR BUSINESS</div>
+        </div>
+    </div>
+</div>
 
+<script>
+    const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
+    const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
+    let currentUser = "";
 
+    async function checkUser() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (session) { setupApp(session.user.email); }
+    }
+
+    async function handleLogin() {
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-pass').value;
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) alert(error.message);
+        else setupApp(data.user.email);
+    }
+
+    function setupApp(email) {
+        document.getElementById('auth-section').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+        const stored = localStorage.getItem('aura_custom_name');
+        currentUser = stored || email.split('@')[0];
+        document.getElementById('logged-in-user').innerText = "@" + currentUser;
+        document.getElementById('out-date').innerText = new Date().toLocaleDateString();
+        updateReceipt();
+    }
+
+    async function handleLogout() { await _supabase.auth.signOut(); location.reload(); }
+
+    function addNewInputRow() {
+        const container = document.getElementById('items-input-list');
+        const row = document.createElement('div');
+        row.style.display = "flex"; row.style.gap = "5px"; row.style.marginTop = "5px";
+        row.innerHTML = `<input type="text" placeholder="Item" class="in-name" oninput="updateReceipt()"><input type="number" placeholder="Price" class="in-price" style="width:100px" oninput="updateReceipt()"><input type="number" placeholder="Qty" class="in-qty" style="width:60px" value="1" oninput="updateReceipt()">`;
+        container.appendChild(row);
+    }
+
+    function updateReceipt() {
+        document.getElementById('out-biz').innerText = document.getElementById('biz-name').value || "AURAMINT";
+        document.getElementById('out-cust').innerText = document.getElementById('cust-name').value || "CASH SALE";
+        let subtotal = 0;
+        const names = document.querySelectorAll('.in-name');
+        const prices = document.querySelectorAll('.in-price');
+        const qtys = document.querySelectorAll('.in-qty');
+        const tableBody = document.getElementById('out-items');
+        tableBody.innerHTML = "";
+        names.forEach((n, i) => {
+            const p = parseFloat(prices[i].value) || 0;
+            const q = parseInt(qtys[i].value) || 0;
+            if(n.value || p) {
+                subtotal += (p * q);
+                tableBody.innerHTML += `<tr><td>${n.value || 'Item'}</td><td>${q}</td><td style="text-align:right">৳${(p*q).toFixed(2)}</td></tr>`;
+            }
+        });
+        const discPercent = parseFloat(document.getElementById('in-discount').value) || 0;
+        const total = subtotal - (subtotal * discPercent / 100);
+        document.getElementById('out-sub').innerText = subtotal.toFixed(2);
+        document.getElementById('out-total').innerText = total.toFixed(2);
+    }
+
+    async function verifyCoupon() {
+        const code = document.getElementById('in-coupon').value;
+        const { data } = await _supabase.from('coupons').select('*').eq('code', code).single();
+        if (data) {
+            document.getElementById('in-discount').value = data.discount;
+            document.getElementById('out-code').innerText = code;
+            document.getElementById('out-disc-val').innerText = data.discount;
+            document.getElementById('coupon-row').classList.remove('hidden');
+            updateReceipt();
+        } else { alert("Invalid Code"); }
+    }
+
+    async function saveAndDownload() {
+        const element = document.getElementById('receipt-to-snap');
+        html2canvas(element, { scale: 2 }).then(async canvas => {
+            const link = document.createElement('a');
+            link.download = `Receipt_${Date.now()}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            
+            // SYSTEM LOG - ONLY THING ADDED
+            const biz = document.getElementById('biz-name').value || "AURAMINT";
+            const amt = document.getElementById('out-total').innerText;
+            await _supabase.from('system_logs').insert([{ 
+                type: 'receipt', 
+                message: `Generated Receipt for ${biz} (Total: ৳${amt})`, 
+                user_name: currentUser 
+            }]);
+        });
+    }
+
+    function toggleMenu() { document.getElementById('menu-overlay').classList.toggle('active'); }
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    }
+    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+    checkUser();
+</script>
+</body>
+    </html>
+    
