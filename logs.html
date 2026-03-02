@@ -70,8 +70,14 @@
             padding: 10px; border-bottom: 1px solid var(--border); display: flex; flex-direction: column; gap: 4px;
         }
         .log-entry:last-child { border: none; }
-        .log-meta { font-size: 11px; opacity: 0.6; display: flex; justify-content: space-between; }
+        .log-meta { font-size: 11px; opacity: 0.6; display: flex; justify-content: space-between; align-items: center; }
         .user-tag { color: var(--green); font-weight: bold; }
+        
+        /* New Type Badge Styling */
+        .type-badge {
+            font-size: 9px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;
+            border: 1px solid var(--border); margin-left: 8px;
+        }
 
         /* GRID SIZES */
         .all-logs { grid-column: span 12; }
@@ -171,31 +177,45 @@
             .limit(100);
 
         if (data) {
+            // Clear existing lists before rendering fetched data
             document.getElementById('all-log-list').innerHTML = '';
             document.getElementById('receipt-log-list').innerHTML = '';
             document.getElementById('coupon-log-list').innerHTML = '';
             document.getElementById('profile-log-list').innerHTML = '';
+            
+            // We reverse because renderSingleLog uses 'afterbegin' (puts new stuff at top)
             data.reverse().forEach(log => renderSingleLog(log));
         }
     }
 
     function renderSingleLog(log) {
         const timeStr = new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const safeType = log.type ? log.type.toLowerCase() : 'system';
+        
         const html = `
             <div class="log-entry">
                 <div class="log-meta">
-                    <span>[${timeStr}]</span>
+                    <div>
+                        <span>[${timeStr}]</span>
+                        <span class="type-badge">${safeType}</span>
+                    </div>
                     <span class="user-tag">@${log.user_name}</span>
                 </div>
                 <div>${log.message}</div>
             </div>
         `;
         
+        // 1. Always add to the Master Feed
         document.getElementById('all-log-list').insertAdjacentHTML('afterbegin', html);
         
-        if(log.type === 'receipt') document.getElementById('receipt-log-list').insertAdjacentHTML('afterbegin', html);
-        if(log.type === 'coupon') document.getElementById('coupon-log-list').insertAdjacentHTML('afterbegin', html);
-        if(log.type === 'profile') document.getElementById('profile-log-list').insertAdjacentHTML('afterbegin', html);
+        // 2. Route to specific bento boxes based on the 'type' column
+        if (safeType === 'receipt') {
+            document.getElementById('receipt-log-list').insertAdjacentHTML('afterbegin', html);
+        } else if (safeType === 'coupon') {
+            document.getElementById('coupon-log-list').insertAdjacentHTML('afterbegin', html);
+        } else if (safeType === 'profile') {
+            document.getElementById('profile-log-list').insertAdjacentHTML('afterbegin', html);
+        }
     }
 
     function toggleMenu() { document.getElementById('menu-overlay').classList.toggle('active'); }
@@ -208,4 +228,5 @@
     initLogs();
 </script>
 </body>
-</html>
+        </html>
+    
