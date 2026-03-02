@@ -8,39 +8,22 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
-        :root { --blue: #2563eb; --dark: #1e293b; --gray: #64748b; }
+        :root { --blue: #2563eb; --dark: #1e293b; --gray: #64748b; --success: #22c55e; --error: #ef4444; }
         body { font-family: 'Inter', sans-serif; background: #f1f5f9; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        
-        /* Auth Screen */
         .auth-card { width: 100%; max-width: 400px; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; margin-top: 50px; }
-        .auth-card h2 { margin-bottom: 25px; font-weight: 800; color: var(--dark); }
-
-        /* UI Controls */
         .controls { width: 100%; max-width: 450px; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        
-        /* The Receipt Design */
-        #receipt-to-snap { 
-            width: 380px; background: white; padding: 40px 30px; 
-            color: #000; border: 1px solid #e2e8f0; position: relative;
-        }
+        #receipt-to-snap { width: 380px; background: white; padding: 40px 30px; color: #000; border: 1px solid #e2e8f0; position: relative; }
         .business-name { font-size: 22px; font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
         .receipt-label { text-align: center; font-size: 11px; letter-spacing: 2px; margin-bottom: 30px; color: var(--gray); border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
-        
         .receipt-table { width: 100%; border-collapse: collapse; font-family: 'Courier Prime', monospace; }
         .receipt-table th { text-align: left; font-size: 12px; border-bottom: 1px solid #000; padding-bottom: 5px; }
         .receipt-table td { padding: 8px 0; font-size: 14px; vertical-align: top; }
-        
         .totals-area { margin-top: 20px; border-top: 1px solid #000; padding-top: 10px; text-align: right; font-family: 'Courier Prime', monospace; }
         .final-total { font-size: 20px; font-weight: 700; margin-top: 5px; }
-
         input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 10px; font-size: 14px; box-sizing: border-box; }
-        input:focus { outline: 2px solid var(--blue); border-color: transparent; }
-        
         .btn { width: 100%; padding: 14px; cursor: pointer; border: none; border-radius: 8px; font-weight: 700; font-size: 15px; margin-top: 10px; transition: 0.2s; }
-        .btn-add { background: #f8fafc; color: var(--blue); border: 1px solid var(--blue); }
         .btn-save { background: var(--blue); color: white; }
-        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        
+        .btn-verify { background: #f0fdf4; color: var(--success); border: 1px solid var(--success); font-size: 12px; padding: 8px; margin-top: -5px; margin-bottom: 10px; }
         .hidden { display: none !important; }
         .worker-badge { font-size: 12px; background: #e2e8f0; padding: 4px 10px; border-radius: 20px; margin-bottom: 20px; display: inline-block; }
     </style>
@@ -61,21 +44,24 @@
             <button onclick="location.reload()" style="font-size: 11px; border: none; background: none; color: red; cursor: pointer;">Logout</button>
         </div>
         <h3 style="margin-top:0">Create Receipt</h3>
-        <input type="text" id="biz-name" placeholder="Your Business Name" oninput="updateReceipt()">
+        <input type="text" id="biz-name" placeholder="Business Name" oninput="updateReceipt()">
         <input type="text" id="cust-name" placeholder="Customer Name" oninput="updateReceipt()">
         
         <div id="items-input-list">
             <div style="display:flex; gap:5px;">
                 <input type="text" placeholder="Item" class="in-name" oninput="updateReceipt()">
-                <input type="number" placeholder="$" class="in-price" style="width:80px" oninput="updateReceipt()">
+                <input type="number" placeholder="Price" class="in-price" style="width:80px" oninput="updateReceipt()">
                 <input type="number" placeholder="Qty" class="in-qty" style="width:50px" value="1" oninput="updateReceipt()">
             </div>
         </div>
         
-        <button class="btn btn-add" onclick="addNewInputRow()">+ Add Item</button>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <input type="text" id="in-coupon" placeholder="Coupon Code" oninput="updateReceipt()">
-            <input type="number" id="in-discount" placeholder="Discount %" oninput="updateReceipt()">
+        <button class="btn" style="background:#f8fafc; border:1px solid #ccc;" onclick="addNewInputRow()">+ Add Item</button>
+        
+        <div style="margin-top:15px; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <label style="font-size: 11px; font-weight: 800; color: var(--gray);">COUPON CODE</label>
+            <input type="text" id="in-coupon" placeholder="e.g. SAVE10" style="margin-bottom: 8px;">
+            <button class="btn btn-verify" id="verify-btn" onclick="verifyCoupon()">Verify Coupon</button>
+            <input type="hidden" id="in-discount" value="0">
         </div>
         
         <button class="btn btn-save" id="save-btn" onclick="saveAndDownload()">Save & Download Image</button>
@@ -84,29 +70,19 @@
     <div id="receipt-to-snap">
         <div class="business-name" id="out-biz">MY BUSINESS</div>
         <div class="receipt-label">OFFICIAL SALES RECEIPT</div>
-        
         <p style="font-size:11px; margin-bottom:20px; font-family: 'Courier Prime';">
             DATE: <span id="out-date"></span><br>
             CUSTOMER: <span id="out-cust">CASH SALE</span>
         </p>
-
         <table class="receipt-table">
-            <thead>
-                <tr>
-                    <th style="width:60%">ITEM</th>
-                    <th style="width:10%">QTY</th>
-                    <th style="text-align:right">TOTAL</th>
-                </tr>
-            </thead>
+            <thead><tr><th style="width:60%">ITEM</th><th style="width:10%">QTY</th><th style="text-align:right">TOTAL</th></tr></thead>
             <tbody id="out-items"></tbody>
         </table>
-
         <div class="totals-area">
-            <div>SUBTOTAL: $<span id="out-sub">0.00</span></div>
-            <div id="coupon-row" class="hidden">DISCOUNT (<span id="out-code"></span>): -<span id="out-disc-val">0</span>%</div>
-            <div class="final-total">TOTAL: $<span id="out-total">0.00</span></div>
+            <div>SUBTOTAL: ৳<span id="out-sub">0.00</span></div>
+            <div id="coupon-row" class="hidden" style="color: #ef4444;">DISCOUNT (<span id="out-code"></span>): -<span id="out-disc-val">0</span>%</div>
+            <div class="final-total">TOTAL: ৳<span id="out-total">0.00</span></div>
         </div>
-        
         <div style="margin-top:40px; text-align:center; font-size:10px; font-family:'Courier Prime';">
             THANK YOU FOR YOUR BUSINESS!<br>
             GEN-ID: <span id="gen-id" style="text-transform: uppercase;">---</span>
@@ -123,15 +99,14 @@
     document.getElementById('out-date').innerText = new Date().toLocaleString();
 
     async function handleLogin() {
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-pass').value;
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        
-        if (error) {
-            alert("Error: " + error.message);
-        } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: document.getElementById('login-email').value,
+            password: document.getElementById('login-pass').value
+        });
+        if (error) alert(error.message);
+        else {
             currentUser = data.user;
-            document.getElementById('logged-in-user').innerText = "Worker: " + email;
+            document.getElementById('logged-in-user').innerText = "Worker: " + currentUser.email;
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('main-app').classList.remove('hidden');
         }
@@ -141,9 +116,47 @@
         const div = document.createElement('div');
         div.style.display = "flex"; div.style.gap = "5px";
         div.innerHTML = `<input type="text" placeholder="Item" class="in-name" oninput="updateReceipt()">
-                         <input type="number" placeholder="$" class="in-price" style="width:80px" oninput="updateReceipt()">
+                         <input type="number" placeholder="Price" class="in-price" style="width:80px" oninput="updateReceipt()">
                          <input type="number" placeholder="Qty" class="in-qty" style="width:50px" value="1" oninput="updateReceipt()">`;
         document.getElementById('items-input-list').appendChild(div);
+    }
+
+    async function verifyCoupon() {
+        const code = document.getElementById('in-coupon').value.trim();
+        const subtotal = parseFloat(document.getElementById('out-sub').innerText);
+        const verifyBtn = document.getElementById('verify-btn');
+        
+        if (!code) return;
+        verifyBtn.innerText = "Checking...";
+
+        const { data, error } = await supabaseClient.from('coupons').select('*').eq('code', code).single();
+
+        if (error || !data) {
+            alert("❌ Coupon not found.");
+            resetCoupon();
+        } else if (!data.is_active) {
+            alert("🚫 This coupon is disabled.");
+            resetCoupon();
+        } else if (data.times_used >= data.usage_limit) {
+            alert("⚠️ Coupon usage limit reached.");
+            resetCoupon();
+        } else if (data.expiry_date && new Date(data.expiry_date) < new Date()) {
+            alert("⏰ This coupon has expired.");
+            resetCoupon();
+        } else if (subtotal < data.min_spend) {
+            alert(`💰 Minimum spend for this coupon is ৳${data.min_spend}`);
+            resetCoupon();
+        } else {
+            document.getElementById('in-discount').value = data.discount_percent;
+            alert(`✅ Applied: ${data.discount_percent}% off!`);
+            updateReceipt();
+        }
+        verifyBtn.innerText = "Verify Coupon";
+    }
+
+    function resetCoupon() {
+        document.getElementById('in-discount').value = 0;
+        updateReceipt();
     }
 
     function updateReceipt() {
@@ -152,32 +165,23 @@
         
         let subtotal = 0;
         let html = '';
-        const names = document.querySelectorAll('.in-name');
-        const prices = document.querySelectorAll('.in-price');
-        const qtys = document.querySelectorAll('.in-qty');
-
-        names.forEach((n, i) => {
-            let p = parseFloat(prices[i].value) || 0;
-            let q = parseInt(qtys[i].value) || 0;
-            let rowTotal = p * q;
-            subtotal += rowTotal;
-            if(n.value) {
-                html += `<tr><td>${n.value}</td><td>${q}</td><td style="text-align:right">$${rowTotal.toFixed(2)}</td></tr>`;
-            }
+        document.querySelectorAll('.in-name').forEach((n, i) => {
+            let p = parseFloat(document.querySelectorAll('.in-price')[i].value) || 0;
+            let q = parseInt(document.querySelectorAll('.in-qty')[i].value) || 0;
+            subtotal += (p * q);
+            if(n.value) html += `<tr><td>${n.value}</td><td>${q}</td><td style="text-align:right">৳${(p*q).toFixed(2)}</td></tr>`;
         });
 
-        const discPct = parseFloat(document.getElementById('in-discount').value) || 0;
-        const couponCode = document.getElementById('in-coupon').value;
-        const final = subtotal * (1 - (discPct/100));
-
+        const disc = parseFloat(document.getElementById('in-discount').value) || 0;
+        const final = subtotal * (1 - (disc/100));
         document.getElementById('out-items').innerHTML = html;
         document.getElementById('out-sub').innerText = subtotal.toFixed(2);
         document.getElementById('out-total').innerText = final.toFixed(2);
         
-        if(discPct > 0) {
+        if(disc > 0) {
             document.getElementById('coupon-row').classList.remove('hidden');
-            document.getElementById('out-code').innerText = couponCode || "DISCOUNT";
-            document.getElementById('out-disc-val').innerText = discPct;
+            document.getElementById('out-code').innerText = document.getElementById('in-coupon').value;
+            document.getElementById('out-disc-val').innerText = disc;
         } else {
             document.getElementById('coupon-row').classList.add('hidden');
         }
@@ -185,8 +189,9 @@
 
     async function saveAndDownload() {
         const saveBtn = document.getElementById('save-btn');
-        saveBtn.innerText = "Saving to Database...";
+        const couponCode = document.getElementById('in-coupon').value.trim();
         saveBtn.disabled = true;
+        saveBtn.innerText = "Processing...";
 
         const itemsData = [];
         document.querySelectorAll('.in-name').forEach((n, i) => {
@@ -197,37 +202,35 @@
             });
         });
 
-        // 1. SAVE TO SUPABASE
         const { data, error } = await supabaseClient.from('receipts').insert([{
             worker_id: currentUser.id,
             customer_name: document.getElementById('cust-name').value || "Cash Sale",
             items: itemsData,
             subtotal: parseFloat(document.getElementById('out-sub').innerText),
-            coupon_code: document.getElementById('in-coupon').value,
-            discount_percent: parseFloat(document.getElementById('in-discount').value || 0),
+            coupon_code: couponCode || null,
+            discount_percent: parseFloat(document.getElementById('in-discount').value),
             final_total: parseFloat(document.getElementById('out-total').innerText)
         }]).select();
 
         if (error) {
-            alert("Database Save Error: " + error.message);
-            saveBtn.innerText = "Retry Save";
+            alert("Error: " + error.message);
             saveBtn.disabled = false;
         } else {
-            // 2. SHOW UNIQUE ID ON RECEIPT
+            // IF COUPON USED, UPDATE THE USAGE COUNT IN DB
+            if (couponCode && parseFloat(document.getElementById('in-discount').value) > 0) {
+                await supabaseClient.rpc('increment_coupon_usage', { coupon_code: couponCode });
+            }
+
             document.getElementById('gen-id').innerText = data[0].id.substring(0,8);
-            
-            // 3. GENERATE IMAGE
-            html2canvas(document.getElementById('receipt-to-snap'), { scale: 3, backgroundColor: "#ffffff" }).then(canvas => {
+            html2canvas(document.getElementById('receipt-to-snap'), { scale: 3 }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `Receipt-${data[0].id.substring(0,8)}.png`;
-                link.href = canvas.toDataURL('image/png');
+                link.href = canvas.toDataURL();
                 link.click();
-                saveBtn.innerText = "Save & Download Image";
-                saveBtn.disabled = false;
+                location.reload();
             });
         }
     }
 </script>
 </body>
 </html>
-w
