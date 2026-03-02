@@ -1,41 +1,138 @@
-<div id="main-content" class="bento-container hidden">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURAMINT | Coupon Manager</title>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #000000;
+            --card: #0a0a0a;
+            --text: #ffffff;
+            --sub-text: #888888;
+            --accent: linear-gradient(90deg, #3ecf8e, #3182ce);
+            --border: rgba(255, 255, 255, 0.08);
+            --glass: rgba(255, 255, 255, 0.03);
+        }
+        body.light-mode {
+            --bg: #fcfcfc;
+            --card: #ffffff;
+            --text: #000000;
+            --sub-text: #666666;
+            --border: rgba(0, 0, 0, 0.08);
+            --glass: rgba(0, 0, 0, 0.02);
+        }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+        
+        header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; background: var(--bg); }
+        .brand-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 2000; }
+        .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
+        
+        .nav-overlay { position: fixed; top: 0; right: -100%; width: 300px; height: 100%; background: var(--card); border-left: 1px solid var(--border); z-index: 1500; display: flex; flex-direction: column; padding: 100px 40px; gap: 20px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .nav-overlay.active { right: 0; }
+        .nav-overlay a, .nav-overlay button { font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); background: none; border: none; text-align: left; cursor: pointer; padding: 0; }
+
+        .bento-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
+        .bento-item { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 30px; position: relative; overflow: hidden; }
+        
+        .form-box { grid-column: span 5; }
+        .list-box { grid-column: span 7; }
+
+        input, select { width: 100%; background: var(--glass); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text); margin-top: 8px; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        label { font-size: 11px; font-weight: 800; color: #3ecf8e; text-transform: uppercase; display: block; margin-top: 15px; letter-spacing: 1px; }
+
+        .pill-btn { background: var(--text); color: var(--bg); border: none; padding: 14px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 25px; }
+        .pill-btn:hover { opacity: 0.8; transform: translateY(-2px); }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; font-size: 10px; color: var(--sub-text); text-transform: uppercase; padding: 15px 10px; border-bottom: 1px solid var(--border); }
+        td { padding: 15px 10px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+        
+        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 9px; font-weight: 800; text-transform: uppercase; }
+        .active-pill { background: rgba(62, 207, 142, 0.15); color: #3ecf8e; }
+        .expired-pill { background: rgba(255, 77, 77, 0.15); color: #ff4d4d; }
+
+        .action-btn { background: var(--glass); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 8px; font-size: 11px; cursor: pointer; transition: 0.2s; }
+        .action-btn:hover { background: var(--text); color: var(--bg); }
+
+        .hidden { display: none !important; }
+        @media (max-width: 900px) { .form-box, .list-box { grid-column: span 12; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand-logo" onclick="location.href='index.html'">AURAMINT</div>
+    <div class="menu-trigger" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+    </div>
+</header>
+
+<div class="nav-overlay" id="menu-overlay">
+    <a href="index.html">Dashboard</a>
+    <a href="receipts.html">Receipts</a>
+    <a href="coupons.html">Coupons</a>
+    <hr style="border:0; border-top:1px solid var(--border); width:100%;">
+    <button onclick="toggleTheme()">🌓 Toggle Appearance</button>
+    <button onclick="handleLogout()" style="color: #ff4d4d;">🚪 Logout</button>
+</div>
+
+<div id="main-app" class="bento-container hidden">
     <div class="bento-item form-box">
-        <h3 style="margin: 0 0 5px 0;">Master Coupon Control</h3>
-        <p style="color: var(--sub-text); font-size: 13px; margin-bottom: 20px;">Manage all Supabase fields here.</p>
+        <div style="background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; font-size: 12px; margin-bottom: 10px;">COUPON ENGINE</div>
+        <h3 style="margin: 0 0 20px 0; font-size: 24px;">Configure Offer</h3>
         
-        <div id="edit-mode-tag" class="hidden" style="background: #3ecf8e; color: #000; padding: 5px 10px; border-radius: 5px; font-size: 10px; font-weight: 900; margin-bottom: 10px; display: inline-block;">EDITING MODE</div>
+        <div id="edit-indicator" class="hidden" style="background: #3ecf8e; color: #000; padding: 6px 12px; border-radius: 12px; font-size: 10px; font-weight: 900; margin-bottom: 15px; display: inline-block;">MODIFICATION MODE</div>
 
-        <label>Coupon Code</label>
-        <input type="text" id="code" placeholder="MINT20">
-        
-        <label>Discount Percentage</label>
-        <input type="number" id="discount" placeholder="20">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+                <label>Code</label>
+                <input type="text" id="code" placeholder="MINT50">
+            </div>
+            <div>
+                <label>Discount %</label>
+                <input type="number" id="discount" placeholder="50">
+            </div>
+        </div>
 
-        <label>Usage Limit (Max uses)</label>
-        <input type="number" id="usage_limit" placeholder="100" value="1">
-        
-        <label>Min Spend (৳)</label>
-        <input type="number" id="min_spend" placeholder="500" value="0">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+                <label>Usage Limit</label>
+                <input type="number" id="usage_limit" value="100">
+            </div>
+            <div>
+                <label>Min Spend (৳)</label>
+                <input type="number" id="min_spend" value="0">
+            </div>
+        </div>
 
         <label>Expiry Date & Time</label>
         <input type="datetime-local" id="expiry_date">
+
+        <label>Initial Status</label>
+        <select id="is_active">
+            <option value="true">Active / Enabled</option>
+            <option value="false">Disabled / Paused</option>
+        </select>
         
         <input type="hidden" id="editing-id">
         
-        <button id="submit-btn" class="pill-btn" onclick="handleSubmit()">Save Coupon to Database</button>
-        <button id="cancel-btn" class="hidden" style="background: none; border: 1px solid var(--border); color: var(--text); padding: 10px; width:100%; border-radius: 100px; margin-top: 10px; cursor: pointer;" onclick="cancelEdit()">Cancel Edit</button>
+        <button id="submit-btn" class="pill-btn" onclick="handleSubmit()">Save to Supabase</button>
+        <button id="cancel-btn" class="hidden" style="background: none; border: 1px solid var(--border); color: var(--text); padding: 12px; width:100%; border-radius: 100px; margin-top: 10px; cursor: pointer; font-weight: 600;" onclick="resetForm()">Discard Changes</button>
     </div>
 
     <div class="bento-item list-box">
-        <h3 style="margin: 0 0 20px 0;">Database Overview</h3>
+        <h3 style="margin: 0 0 20px 0;">Live Coupons</h3>
         <div style="overflow-x: auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Code</th>
-                        <th>Info</th>
-                        <th>Limits/Used</th>
-                        <th>Expires</th>
+                        <th>Code / Info</th>
+                        <th>Usage</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -47,29 +144,44 @@
 </div>
 
 <script>
-    // ... [Previous Supabase Client Setup] ...
+    const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
+    const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+    async function checkAuth() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session) window.location.href = 'index.html';
+        else { document.getElementById('main-app').classList.remove('hidden'); loadCoupons(); }
+    }
 
     async function loadCoupons() {
-        const { data } = await _supabase.from('coupons').select('*').order('created_at', { ascending: false });
+        const { data, error } = await _supabase.from('coupons').select('*').order('created_at', { ascending: false });
+        if (error) return console.error(error);
+
         const body = document.getElementById('couponTableBody');
         body.innerHTML = '';
         
         data.forEach(c => {
-            const expiry = c.expiry_date ? new Date(c.expiry_date).toLocaleString() : 'Never';
             const isExpired = c.expiry_date && new Date(c.expiry_date) < new Date();
+            const statusClass = (c.is_active && !isExpired) ? 'active-pill' : 'expired-pill';
+            const statusLabel = isExpired ? 'Expired' : (c.is_active ? 'Active' : 'Off');
             
             body.innerHTML += `
                 <tr>
-                    <td><strong>${c.code}</strong></td>
-                    <td>${c.discount_percent}% off<br><small>Min: ৳${c.min_spend}</small></td>
-                    <td>${c.times_used || 0} / ${c.usage_limit}</td>
-                    <td style="color: ${isExpired ? '#ff4d4d' : 'inherit'}">${expiry}</td>
-                    <td><span class="status-pill ${c.is_active && !isExpired ? 'active-status' : 'off-status'}">
-                        ${isExpired ? 'EXPIRED' : (c.is_active ? 'ACTIVE' : 'OFF')}
-                    </span></td>
                     <td>
-                        <button class="action-link" onclick='startEdit(${JSON.stringify(c)})'>Edit</button>
-                        <button class="action-link" style="color:#ff4d4d" onclick="deleteCoupon('${c.id}')">Del</button>
+                        <div style="font-weight:800; letter-spacing:1px;">${c.code}</div>
+                        <div style="font-size:10px; color:var(--sub-text)">${c.discount_percent}% Off • Min ৳${c.min_spend}</div>
+                    </td>
+                    <td>
+                        <div style="font-size:11px;">${c.times_used || 0} / ${c.usage_limit}</div>
+                        <div style="font-size:9px; color:var(--sub-text)">Uses Left</div>
+                    </td>
+                    <td><span class="status-pill ${statusClass}">${statusLabel}</span></td>
+                    <td>
+                        <div style="display:flex; gap:5px;">
+                            <button class="action-btn" onclick='prepareEdit(${JSON.stringify(c)})'>Edit</button>
+                            <button class="action-btn" style="color:#ff4d4d; border-color:rgba(255,77,77,0.2)" onclick="deleteCoupon('${c.id}')">Del</button>
+                        </div>
                     </td>
                 </tr>`;
         });
@@ -80,43 +192,69 @@
         const payload = {
             code: document.getElementById('code').value.toUpperCase(),
             discount_percent: parseFloat(document.getElementById('discount').value),
-            min_spend: parseFloat(document.getElementById('min_spend').value),
-            usage_limit: parseInt(document.getElementById('usage_limit').value),
+            min_spend: parseFloat(document.getElementById('min_spend').value) || 0,
+            usage_limit: parseInt(document.getElementById('usage_limit').value) || 1,
             expiry_date: document.getElementById('expiry_date').value || null,
-            is_active: true
+            is_active: document.getElementById('is_active').value === "true"
         };
 
+        if (!payload.code || isNaN(payload.discount_percent)) return alert("Code and Discount are required!");
+
+        let res;
         if (id) {
-            await _supabase.from('coupons').update(payload).eq('id', id);
+            res = await _supabase.from('coupons').update(payload).eq('id', id);
         } else {
-            await _supabase.from('coupons').insert([payload]);
+            res = await _supabase.from('coupons').insert([payload]);
         }
-        
-        cancelEdit();
-        loadCoupons();
+
+        if (res.error) alert("Database Error: " + res.error.message);
+        else { resetForm(); loadCoupons(); }
     }
 
-    function startEdit(c) {
+    function prepareEdit(c) {
         document.getElementById('editing-id').value = c.id;
         document.getElementById('code').value = c.code;
         document.getElementById('discount').value = c.discount_percent;
         document.getElementById('min_spend').value = c.min_spend;
         document.getElementById('usage_limit').value = c.usage_limit;
-        // Format date for input: YYYY-MM-DDTHH:MM
-        if(c.expiry_date) {
-            document.getElementById('expiry_date').value = new Date(c.expiry_date).toISOString().slice(0, 16);
-        }
+        document.getElementById('is_active').value = String(c.is_active);
+        if(c.expiry_date) document.getElementById('expiry_date').value = c.expiry_date.slice(0, 16);
         
-        document.getElementById('edit-mode-tag').classList.remove('hidden');
+        document.getElementById('edit-indicator').classList.remove('hidden');
         document.getElementById('cancel-btn').classList.remove('hidden');
-        document.getElementById('submit-btn').innerText = "Update Database Entry";
+        document.getElementById('submit-btn').innerText = "Update Coupon";
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function resetForm() {
+        document.getElementById('editing-id').value = "";
+        document.getElementById('code').value = "";
+        document.getElementById('discount').value = "";
+        document.getElementById('min_spend').value = "0";
+        document.getElementById('usage_limit').value = "100";
+        document.getElementById('expiry_date').value = "";
+        document.getElementById('edit-indicator').classList.add('hidden');
+        document.getElementById('cancel-btn').classList.add('hidden');
+        document.getElementById('submit-btn').innerText = "Save to Supabase";
     }
 
     async function deleteCoupon(id) {
-        if(confirm("Delete this coupon permanently?")) {
+        if(confirm("Confirm permanent deletion?")) {
             await _supabase.from('coupons').delete().eq('id', id);
             loadCoupons();
         }
     }
-    // ... [Keep helper functions: cancelEdit, toggleTheme, etc.] ...
+
+    async function handleLogout() { await _supabase.auth.signOut(); location.reload(); }
+    function toggleMenu() { document.getElementById('menu-overlay').classList.toggle('active'); }
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        localStorage.setItem('theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
+    }
+    
+    if (localStorage.getItem('theme') === 'light') document.body.classList.add('light-mode');
+    checkAuth();
 </script>
+</body>
+    </html>
+                                     
