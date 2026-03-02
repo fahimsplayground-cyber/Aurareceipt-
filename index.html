@@ -27,7 +27,7 @@
 
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
 
-        /* --- HEADER & MENU --- */
+        /* --- HEADER --- */
         header {
             padding: 20px 40px;
             display: flex;
@@ -45,22 +45,40 @@
             background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
-        .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 2000; }
+        .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 1000; }
         .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
 
+        /* --- REDESIGNED NAV OVERLAY --- */
         .nav-overlay {
             position: fixed;
-            top: 0; right: -100%; width: 300px; height: 100%;
+            top: 0; right: -100%; width: 320px; height: 100%;
             background: var(--card); border-left: 1px solid var(--border);
-            z-index: 1500; display: flex; flex-direction: column;
-            padding: 100px 40px; gap: 20px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 2500; display: flex; flex-direction: column;
+            padding: 60px 40px; gap: 15px; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
         }
         .nav-overlay.active { right: 0; }
-        .nav-overlay a, .nav-overlay button { 
-            font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); 
-            background: none; border: none; text-align: left; cursor: pointer; padding: 0;
+
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            font-size: 35px;
+            color: var(--sub-text);
+            cursor: pointer;
+            transition: 0.3s;
+            line-height: 1;
         }
-        .nav-overlay hr { border: 0; border-top: 1px solid var(--border); margin: 20px 0; }
+        .close-btn:hover { color: #ff4d4d; transform: rotate(90deg); }
+
+        .nav-link { 
+            font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); 
+            background: none; border: none; text-align: left; cursor: pointer; 
+            padding: 10px 0; transition: 0.3s ease; display: block;
+        }
+        .nav-link:hover { padding-left: 10px; color: #3ecf8e !important; }
+
+        .nav-overlay hr { border: 0; border-top: 1px solid var(--border); margin: 15px 0; }
 
         /* --- BENTO GRID --- */
         .bento-container {
@@ -107,12 +125,19 @@
 </header>
 
 <div class="nav-overlay" id="menu-overlay">
-    <a href="index.html">Dashboard</a>
-    <a href="receipts.html">Receipts</a>
-    <a href="coupons.html">Coupons</a>
+    <div class="close-btn" onclick="toggleMenu()">&times;</div>
+    
+    <div style="margin-bottom: 20px;">
+        <div class="brand-logo" style="cursor: default;">AURAMINT</div>
+        <p style="font-size: 10px; color: var(--sub-text); letter-spacing: 1px; margin-top: 5px;">WORKSTATION MENU</p>
+    </div>
+
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="receipts.html" class="nav-link">Receipts</a>
+    <a href="coupons.html" class="nav-link">Coupons</a>
     <hr>
-    <button onclick="toggleTheme()">🌓 Toggle Appearance</button>
-    <button onclick="handleLogout()" style="color: #ff4d4d;">🚪 Logout</button>
+    <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
+    <button onclick="handleLogout()" class="nav-link" style="color: #ff4d4d;">🚪 Logout</button>
 </div>
 
 <div id="auth-section" class="auth-screen">
@@ -149,58 +174,42 @@
 
 <script>
     const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
-    // NEW ANON KEY APPLIED
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
     
     const _supabase = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true } });
 
     async function checkUser() {
         const { data: { session } } = await _supabase.auth.getSession();
-        if (session) {
-            showDashboard(session.user.email);
-        }
+        if (session) { showDashboard(session.user.email); }
     }
 
     async function handleLogin() {
         const email = document.getElementById('email').value;
         const password = document.getElementById('pass').value;
         const btn = document.getElementById('login-btn');
-        
         if(!email || !password) return alert("Please fill in all fields.");
-        
         btn.innerText = "Authenticating...";
         btn.disabled = true;
-
         const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-        
         if (error) {
             alert(error.message);
             btn.innerText = "Continue";
             btn.disabled = false;
-        } else {
-            showDashboard(data.user.email);
-        }
+        } else { showDashboard(data.user.email); }
     }
 
     function showDashboard(email) {
         document.getElementById('auth-section').classList.add('hidden');
         document.getElementById('main-dashboard').classList.remove('hidden');
-        
         const stored = localStorage.getItem('aura_custom_name');
         document.getElementById('greet-name').innerText = stored || email.split('@')[0];
     }
 
-    async function handleLogout() {
-        await _supabase.auth.signOut();
-        location.reload();
-    }
+    async function handleLogout() { await _supabase.auth.signOut(); location.reload(); }
 
     function saveName() {
         const val = document.getElementById('name-input').value;
-        if(val) {
-            localStorage.setItem('aura_custom_name', val);
-            location.reload();
-        }
+        if(val) { localStorage.setItem('aura_custom_name', val); location.reload(); }
     }
 
     function toggleMenu() {
@@ -216,4 +225,5 @@
     checkUser();
 </script>
 </body>
-</html>
+            </html>
+                                               
