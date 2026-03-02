@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURAMINT | Home</title>
+    <style>
+        /* --- THEME SYSTEM --- */
+        :root {
+            --bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text: #e0e0e0;
+            --accent: #3ecf8e; /* Green */
+            --border: #333;
+        }
+
+        body.light-mode {
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --text: #2d3748;
+            --accent: #3182ce; /* Blue */
+            --border: #e2e8f0;
+        }
+
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            transition: 0.3s;
+        }
+
+        /* --- HEADER & NAV --- */
+        header {
+            background: var(--card-bg);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .brand-name {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 6px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        nav {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        nav a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 18px;
+            transition: 0.2s;
+        }
+
+        nav a:hover { color: var(--accent); }
+
+        .theme-toggle {
+            position: absolute;
+            right: 20px;
+            top: 25px;
+            cursor: pointer;
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* --- DASHBOARD CONTENT --- */
+        .container {
+            max-width: 900px;
+            margin: 60px auto;
+            text-align: center;
+        }
+
+        .welcome-text h1 { font-size: 48px; margin-bottom: 10px; }
+        .welcome-text p { font-size: 20px; color: #888; margin-bottom: 40px; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .menu-card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            text-decoration: none;
+            color: var(--text);
+            transition: 0.3s;
+        }
+
+        .menu-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .menu-card h2 { font-size: 40px; margin: 0; }
+        .menu-card h3 { margin-top: 10px; color: var(--accent); }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand-name">AURAMINT</div>
+    <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Mode</button>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="receipts.html">Receipts</a>
+        <a href="coupons.html">Coupons</a>
+    </nav>
+</header>
+
+<div class="container">
+    <div class="welcome-text">
+        <h1>Dashboard</h1>
+        <p>Manage your business tools from one place.</p>
+    </div>
+
+    <div class="menu-grid">
+        <a href="receipts.html" class="menu-card">
+            <h2>📄</h2>
+            <h3>Receipt Generator</h3>
+            <p>Create and save new customer receipts.</p>
+        </a>
+
+        <a href="coupons.html" class="menu-card">
+            <h2>🎟️</h2>
+            <h3>Coupon Manager</h3>
+            <p>Create, track, and delete discount codes.</p>
+        </a>
+    </div>
+</div>
+
+<script>
+    function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        // Save choice for next time
+        const isLight = document.body.classList.contains('light-mode');
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+
+    // Load saved theme on startup
+    if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light-mode');
+    }
+</script>
+
+</body>
+</html>
