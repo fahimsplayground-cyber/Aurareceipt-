@@ -26,16 +26,46 @@
         }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
         
+        /* --- HEADER --- */
         header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; background: var(--bg); }
         .brand-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         
-        .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 2000; }
+        .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 1000; }
         .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
         
-        .nav-overlay { position: fixed; top: 0; right: -100%; width: 300px; height: 100%; background: var(--card); border-left: 1px solid var(--border); z-index: 1500; display: flex; flex-direction: column; padding: 100px 40px; gap: 20px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        /* --- REDESIGNED NAV OVERLAY --- */
+        .nav-overlay {
+            position: fixed;
+            top: 0; right: -100%; width: 320px; height: 100%;
+            background: var(--card); border-left: 1px solid var(--border);
+            z-index: 2500; display: flex; flex-direction: column;
+            padding: 60px 40px; gap: 15px; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
         .nav-overlay.active { right: 0; }
-        .nav-overlay a, .nav-overlay button { font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); background: none; border: none; text-align: left; cursor: pointer; padding: 0; }
 
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            font-size: 35px;
+            color: var(--sub-text);
+            cursor: pointer;
+            transition: 0.3s;
+            line-height: 1;
+        }
+        .close-btn:hover { color: #ff4d4d; transform: rotate(90deg); }
+
+        .nav-link { 
+            font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); 
+            background: none; border: none; text-align: left; cursor: pointer; 
+            padding: 10px 0; transition: 0.3s ease; display: block;
+        }
+        .nav-link:hover { padding-left: 10px; color: #3ecf8e !important; }
+
+        .nav-overlay hr { border: 0; border-top: 1px solid var(--border); margin: 15px 0; }
+
+        /* --- BENTO LAYOUT --- */
         .bento-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
         .bento-item { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 30px; position: relative; overflow: hidden; }
         
@@ -45,7 +75,8 @@
         input, select { width: 100%; background: var(--glass); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text); margin-top: 8px; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         label { font-size: 11px; font-weight: 800; color: #3ecf8e; text-transform: uppercase; display: block; margin-top: 15px; letter-spacing: 1px; }
 
-        .pill-btn { background: var(--text); color: var(--bg); border: none; padding: 14px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 25px; }
+        /* Updated Gradient Button */
+        .pill-btn { background: var(--accent); color: white; border: none; padding: 14px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 25px; }
         .pill-btn:hover { opacity: 0.8; transform: translateY(-2px); }
         
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -73,12 +104,17 @@
 </header>
 
 <div class="nav-overlay" id="menu-overlay">
-    <a href="index.html">Dashboard</a>
-    <a href="receipts.html">Receipts</a>
-    <a href="coupons.html">Coupons</a>
-    <hr style="border:0; border-top:1px solid var(--border); width:100%;">
-    <button onclick="toggleTheme()">🌓 Toggle Appearance</button>
-    <button onclick="handleLogout()" style="color: #ff4d4d;">🚪 Logout</button>
+    <div class="close-btn" onclick="toggleMenu()">&times;</div>
+    <div style="margin-bottom: 20px;">
+        <div class="brand-logo" style="cursor: default;">AURAMINT</div>
+        <p style="font-size: 10px; color: var(--sub-text); letter-spacing: 1px; margin-top: 5px;">WORKSTATION MENU</p>
+    </div>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="receipts.html" class="nav-link">Receipts</a>
+    <a href="coupons.html" class="nav-link">Coupons</a>
+    <hr>
+    <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
+    <button onclick="handleLogout()" class="nav-link" style="color: #ff4d4d;">🚪 Logout</button>
 </div>
 
 <div id="main-app" class="bento-container hidden">
@@ -121,7 +157,7 @@
         
         <input type="hidden" id="editing-id">
         
-        <button id="submit-btn" class="pill-btn" onclick="handleSubmit()">Save to Supabase</button>
+        <button id="submit-btn" class="pill-btn" onclick="handleSubmit()">Save</button>
         <button id="cancel-btn" class="hidden" style="background: none; border: 1px solid var(--border); color: var(--text); padding: 12px; width:100%; border-radius: 100px; margin-top: 10px; cursor: pointer; font-weight: 600;" onclick="resetForm()">Discard Changes</button>
     </div>
 
@@ -222,7 +258,7 @@
         
         document.getElementById('edit-indicator').classList.remove('hidden');
         document.getElementById('cancel-btn').classList.remove('hidden');
-        document.getElementById('submit-btn').innerText = "Update Coupon";
+        document.getElementById('submit-btn').innerText = "Update";
         window.scrollTo({top: 0, behavior: 'smooth'});
     }
 
@@ -235,7 +271,7 @@
         document.getElementById('expiry_date').value = "";
         document.getElementById('edit-indicator').classList.add('hidden');
         document.getElementById('cancel-btn').classList.add('hidden');
-        document.getElementById('submit-btn').innerText = "Save to Supabase";
+        document.getElementById('submit-btn').innerText = "Save";
     }
 
     async function deleteCoupon(id) {
@@ -257,4 +293,4 @@
 </script>
 </body>
     </html>
-                                     
+    
