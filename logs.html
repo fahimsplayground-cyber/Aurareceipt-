@@ -98,12 +98,12 @@
 
 <div class="nav-overlay" id="menu-overlay">
     <div class="close-btn" onclick="toggleMenu()">&times;</div>
-    <div class="brand-logo" style="margin-bottom: 20px;">AURAMINT</div>
+    <div class="brand-logo" style="margin-bottom: 20px; width: fit-content;">AURAMINT</div>
     <a href="index.html" class="nav-link">Dashboard</a>
     <a href="receipts.html" class="nav-link">Receipts</a>
     <a href="coupons.html" class="nav-link">Coupons</a>
     <a href="profilem.html" class="nav-link">Profile</a>
-    <a href="logs.html" class="nav-link" style="color: #3ecf8e;">System Logs</a>
+    <a href="logs.html" class="nav-link" style="color: var(--green);">System Logs</a>
     <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
     <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
 </div>
@@ -114,8 +114,7 @@
             <span class="log-title">Master System Console (Combined)</span>
             <span style="color: var(--sub-text); font-size: 12px;">Real-time feed</span>
         </div>
-        <div class="log-list" id="all-log-list">
-            </div>
+        <div class="log-list" id="all-log-list"></div>
     </div>
 
     <div class="bento-item receipt-logs">
@@ -145,47 +144,58 @@
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
     const _supabase = supabase.createClient(SB_URL, SB_KEY);
 
+    let currentUser = "";
+
     async function initLogs() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (!session) { window.location.href = 'index.html'; return; }
 
-        // Get User Identity logic
         const storedName = localStorage.getItem('aura_custom_name');
-        const userDisplayName = storedName || session.user.email.split('@')[0];
+        currentUser = storedName || session.user.email.split('@')[0];
 
-        // MOCK DATA GENERATOR (Replace with actual Supabase fetching)
-        const mockLogs = [
-            { type: 'receipt', msg: 'Generated Invoice #8829 for client "Vertex Labs"', time: '10:42 AM', user: userDisplayName },
-            { type: 'coupon', msg: 'Updated code "SUMMER20" - changed discount to 25%', time: '09:15 AM', user: userDisplayName },
-            { type: 'profile', msg: 'Updated profile picture and role to Lead Architect', time: 'Yesterday', user: userDisplayName },
-            { type: 'receipt', msg: 'Deleted draft receipt #102', time: 'Yesterday', user: userDisplayName },
-        ];
+        fetchLogs();
 
-        renderLogs(mockLogs);
+        _supabase
+            .channel('system_logs_channel')
+            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'system_logs' }, payload => {
+                renderSingleLog(payload.new);
+            })
+            .subscribe();
     }
 
-    function renderLogs(logs) {
-        const allList = document.getElementById('all-log-list');
-        const receiptList = document.getElementById('receipt-log-list');
-        const couponList = document.getElementById('coupon-log-list');
-        const profileList = document.getElementById('profile-log-list');
+    async function fetchLogs() {
+        const { data, error } = await _supabase
+            .from('system_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(100);
 
-        logs.forEach(log => {
-            const html = `
-                <div class="log-entry">
-                    <div class="log-meta">
-                        <span>[${log.time}]</span>
-                        <span class="user-tag">@${log.user}</span>
-                    </div>
-                    <div>${log.msg}</div>
+        if (data) {
+            document.getElementById('all-log-list').innerHTML = '';
+            document.getElementById('receipt-log-list').innerHTML = '';
+            document.getElementById('coupon-log-list').innerHTML = '';
+            document.getElementById('profile-log-list').innerHTML = '';
+            data.reverse().forEach(log => renderSingleLog(log));
+        }
+    }
+
+    function renderSingleLog(log) {
+        const timeStr = new Date(log.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const html = `
+            <div class="log-entry">
+                <div class="log-meta">
+                    <span>[${timeStr}]</span>
+                    <span class="user-tag">@${log.user_name}</span>
                 </div>
-            `;
-            
-            allList.innerHTML += html;
-            if(log.type === 'receipt') receiptList.innerHTML += html;
-            if(log.type === 'coupon') couponList.innerHTML += html;
-            if(log.type === 'profile') profileList.innerHTML += html;
-        });
+                <div>${log.message}</div>
+            </div>
+        `;
+        
+        document.getElementById('all-log-list').insertAdjacentHTML('afterbegin', html);
+        
+        if(log.type === 'receipt') document.getElementById('receipt-log-list').insertAdjacentHTML('afterbegin', html);
+        if(log.type === 'coupon') document.getElementById('coupon-log-list').insertAdjacentHTML('afterbegin', html);
+        if(log.type === 'profile') document.getElementById('profile-log-list').insertAdjacentHTML('afterbegin', html);
     }
 
     function toggleMenu() { document.getElementById('menu-overlay').classList.toggle('active'); }
@@ -198,5 +208,4 @@
     initLogs();
 </script>
 </body>
-  </html>
-  
+</html>
