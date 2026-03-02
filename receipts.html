@@ -26,21 +26,59 @@
             --glass: rgba(0, 0, 0, 0.02);
         }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+        
+        /* --- HEADER & NAV --- */
         header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 1000; background: var(--bg); }
         .brand-logo { font-size: 20px; font-weight: 900; letter-spacing: 4px; cursor: pointer; background: var(--accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 2000; }
+        .menu-trigger { cursor: pointer; display: flex; flex-direction: column; gap: 5px; z-index: 1000; }
         .menu-trigger span { width: 25px; height: 2px; background: var(--text); border-radius: 2px; transition: 0.3s; }
-        .nav-overlay { position: fixed; top: 0; right: -100%; width: 300px; height: 100%; background: var(--card); border-left: 1px solid var(--border); z-index: 1500; display: flex; flex-direction: column; padding: 100px 40px; gap: 20px; transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        .nav-overlay {
+            position: fixed;
+            top: 0; right: -100%; width: 320px; height: 100%;
+            background: var(--card); border-left: 1px solid var(--border);
+            z-index: 2500; display: flex; flex-direction: column;
+            padding: 60px 40px; gap: 15px; transition: 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+        }
         .nav-overlay.active { right: 0; }
-        .nav-overlay a, .nav-overlay button { font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); background: none; border: none; text-align: left; cursor: pointer; padding: 0; }
+        
+        .close-btn {
+            position: absolute;
+            top: 25px;
+            right: 30px;
+            font-size: 35px;
+            color: var(--sub-text);
+            cursor: pointer;
+            transition: 0.3s;
+            line-height: 1;
+        }
+        .close-btn:hover { color: #ff4d4d; transform: rotate(90deg); }
+        
+        .nav-link { 
+            font-size: 20px; font-weight: 600; text-decoration: none; color: var(--text); 
+            background: none; border: none; text-align: left; cursor: pointer; 
+            padding: 10px 0; transition: 0.3s ease; display: block;
+        }
+        .nav-link:hover { padding-left: 10px; color: #3ecf8e !important; }
+
+        /* --- BENTO LAYOUT --- */
         .bento-container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: repeat(12, 1fr); gap: 20px; }
         .bento-item { background: var(--card); border: 1px solid var(--border); border-radius: 28px; padding: 30px; position: relative; overflow: hidden; transition: 0.3s ease; }
         .controls-box { grid-column: span 5; }
         .preview-box { grid-column: span 7; display: flex; justify-content: center; align-items: flex-start; background: var(--glass); }
+        
         input { width: 100%; background: var(--glass); border: 1px solid var(--border); padding: 12px; border-radius: 12px; color: var(--text); margin-top: 10px; box-sizing: border-box; }
-        .pill-btn { background: var(--text); color: var(--bg); border: none; padding: 12px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; width: fit-content; transition: 0.3s; margin-top: 15px; display: inline-block; text-decoration: none; text-align: center; }
-        .pill-btn:hover { opacity: 0.8; }
+        
+        /* BUTTONS */
+        .pill-btn { background: var(--text); color: var(--bg); border: none; padding: 12px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; transition: 0.3s; display: inline-block; text-decoration: none; text-align: center; }
+        .pill-btn:hover { opacity: 0.9; transform: translateY(-2px); }
+        
+        .gradient-btn { background: var(--accent); color: white; border: none; }
+
         .worker-badge { font-size: 11px; background: #3ecf8e; color: #000; padding: 4px 12px; border-radius: 20px; font-weight: 800; margin-bottom: 10px; display: inline-block; }
+        
+        /* RECEIPT STYLING */
         #receipt-to-snap { width: 380px; background: white; padding: 40px 30px; color: #000; position: relative; font-family: 'Inter', sans-serif; }
         .business-name { font-size: 22px; font-weight: 800; text-align: center; text-transform: uppercase; margin-bottom: 5px; }
         .receipt-label { text-align: center; font-size: 11px; letter-spacing: 2px; margin-bottom: 30px; color: #64748b; border-bottom: 1px dashed #ccc; padding-bottom: 10px; }
@@ -49,6 +87,7 @@
         .receipt-table td { padding: 8px 0; font-size: 14px; }
         .totals-area { margin-top: 20px; border-top: 1px solid #000; padding-top: 10px; text-align: right; font-family: 'Courier Prime', monospace; }
         .final-total { font-size: 20px; font-weight: 700; margin-top: 5px; }
+        
         .hidden { display: none !important; }
         .auth-screen { height: 80vh; display: flex; align-items: center; justify-content: center; }
         @media (max-width: 900px) { .controls-box, .preview-box { grid-column: span 12; } }
@@ -64,12 +103,17 @@
 </header>
 
 <div class="nav-overlay" id="menu-overlay">
-    <a href="index.html">Dashboard</a>
-    <a href="receipts.html">Receipts</a>
-    <a href="coupons.html">Coupons</a>
+    <div class="close-btn" onclick="toggleMenu()">&times;</div>
+    <div style="margin-bottom: 20px;">
+        <div class="brand-logo" style="cursor: default;">AURAMINT</div>
+        <p style="font-size: 10px; color: var(--sub-text); letter-spacing: 1px; margin-top: 5px;">WORKSTATION MENU</p>
+    </div>
+    <a href="index.html" class="nav-link">Dashboard</a>
+    <a href="receipts.html" class="nav-link">Receipts</a>
+    <a href="coupons.html" class="nav-link">Coupons</a>
     <hr style="border:0; border-top:1px solid var(--border); width:100%;">
-    <button onclick="toggleTheme()">🌓 Toggle Appearance</button>
-    <button onclick="handleLogout()" style="color: #ff4d4d;">🚪 Logout</button>
+    <button onclick="toggleTheme()" class="nav-link">🌓 Appearance</button>
+    <button onclick="handleLogout()" class="nav-link" style="color: #ff4d4d;">🚪 Logout</button>
 </div>
 
 <div id="auth-section" class="auth-screen">
@@ -78,16 +122,18 @@
         <p style="color:var(--sub-text); margin-bottom: 30px;">Authorized Access Only.</p>
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
-        <button class="pill-btn" id="login-btn" style="width: 100%;" onclick="handleLogin()">Continue</button>
+        <button class="pill-btn gradient-btn" id="login-btn" style="width: 100%;" onclick="handleLogin()">Continue</button>
     </div>
 </div>
 
 <div id="main-app" class="bento-container hidden">
     <div class="bento-item controls-box">
         <span class="worker-badge" id="logged-in-user">Worker</span>
-        <h3 style="margin: 10px 0; font-size: 24px;">Receipt Data</h3>
+        <h3 style="margin: 10px 0; font-size: 24px; color: #000;">Receipt Data</h3>
+        
         <input type="text" id="biz-name" placeholder="Business Name" oninput="updateReceipt()">
         <input type="text" id="cust-name" placeholder="Customer Name" oninput="updateReceipt()">
+        
         <div id="items-input-list" style="margin-top: 10px;">
             <div style="display:flex; gap:5px;">
                 <input type="text" placeholder="Item" class="in-name" oninput="updateReceipt()">
@@ -95,14 +141,17 @@
                 <input type="number" placeholder="Qty" class="in-qty" style="width:60px" value="1" oninput="updateReceipt()">
             </div>
         </div>
-        <button class="pill-btn" style="background:var(--glass); color:var(--text); border:1px solid var(--border); font-size:12px;" onclick="addNewInputRow()">+ Add Item</button>
+        
+        <button class="pill-btn gradient-btn" style="font-size:12px; margin-top:10px;" onclick="addNewInputRow()">+ Add Item</button>
+        
         <div style="margin-top:25px; padding: 20px; background: var(--glass); border-radius: 18px; border: 1px solid var(--border);">
             <p style="margin:0 0 10px 0; font-size: 12px; font-weight: 800; color: #3ecf8e;">PROMOTION</p>
             <input type="text" id="in-coupon" placeholder="Coupon Code">
-            <button class="pill-btn" id="verify-btn" style="font-size: 11px; padding: 8px 16px;" onclick="verifyCoupon()">Apply</button>
+            <button class="pill-btn gradient-btn" id="verify-btn" style="font-size: 11px; padding: 8px 16px; margin-top: 10px;" onclick="verifyCoupon()">Apply</button>
             <input type="hidden" id="in-discount" value="0">
         </div>
-        <button class="pill-btn" id="save-btn" style="width: 100%; background: var(--accent); color: white;" onclick="saveAndDownload()">Save & Download PNG</button>
+        
+        <button class="pill-btn" id="save-btn" style="width: 100%; margin-top: 20px; background: var(--text); color: var(--bg);" onclick="saveAndDownload()">Save & Download PNG</button>
     </div>
 
     <div class="bento-item preview-box">
@@ -132,11 +181,9 @@
 
 <script>
     const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
-    // NEW ANON KEY APPLIED
     const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
     
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true } });
-
     let currentUser = null;
     document.getElementById('out-date').innerText = new Date().toLocaleString();
 
@@ -149,20 +196,12 @@
         const btn = document.getElementById('login-btn');
         btn.innerText = "Checking...";
         btn.disabled = true;
-
         const { data, error } = await supabaseClient.auth.signInWithPassword({
             email: document.getElementById('login-email').value,
             password: document.getElementById('login-pass').value
         });
-        
-        if (error) {
-            alert(error.message);
-            btn.innerText = "Continue";
-            btn.disabled = false;
-        } else { 
-            currentUser = data.user; 
-            showApp(); 
-        }
+        if (error) { alert(error.message); btn.innerText = "Continue"; btn.disabled = false; } 
+        else { currentUser = data.user; showApp(); }
     }
 
     function showApp() {
@@ -187,19 +226,11 @@
         const subtotal = parseFloat(document.getElementById('out-sub').innerText);
         const verifyBtn = document.getElementById('verify-btn');
         if (!code) return;
-        
         verifyBtn.innerText = "Checking...";
         verifyBtn.disabled = true;
-        
-        const { data, error } = await supabaseClient
-            .from('coupons')
-            .select('*')
-            .ilike('code', code);
-
-        if (error) {
-            console.error(error);
-            alert("Connection error. Ensure RLS is fixed in SQL Editor.");
-        } else {
+        const { data, error } = await supabaseClient.from('coupons').select('*').ilike('code', code);
+        if (error) { alert("Connection error."); } 
+        else {
             const coupon = data[0];
             if (!coupon) { alert("❌ Coupon not found."); resetCoupon(); }
             else if (!coupon.is_active) { alert("🚫 Disabled."); resetCoupon(); }
@@ -241,28 +272,22 @@
 
     async function saveAndDownload() {
         const saveBtn = document.getElementById('save-btn');
-        const couponCode = document.getElementById('in-coupon').value.trim();
         saveBtn.disabled = true; saveBtn.innerText = "Processing...";
         const itemsData = [];
         document.querySelectorAll('.in-name').forEach((n, i) => {
             if(n.value) itemsData.push({ name: n.value, price: document.querySelectorAll('.in-price')[i].value, qty: document.querySelectorAll('.in-qty')[i].value });
         });
-        
         const { data, error } = await supabaseClient.from('receipts').insert([{
             worker_id: currentUser.id,
             customer_name: document.getElementById('cust-name').value || "Cash Sale",
             items: itemsData,
             subtotal: parseFloat(document.getElementById('out-sub').innerText),
-            coupon_code: couponCode || null,
+            coupon_code: document.getElementById('in-coupon').value.trim() || null,
             discount_percent: parseFloat(document.getElementById('in-discount').value),
             final_total: parseFloat(document.getElementById('out-total').innerText)
         }]).select();
-
-        if (error) { 
-            alert("Error: " + error.message); 
-            saveBtn.disabled = false; 
-            saveBtn.innerText = "Save & Download PNG";
-        } else {
+        if (error) { alert("Error: " + error.message); saveBtn.disabled = false; saveBtn.innerText = "Save & Download PNG"; } 
+        else {
             document.getElementById('gen-id').innerText = data[0].id.substring(0,8);
             html2canvas(document.getElementById('receipt-to-snap'), { scale: 3 }).then(canvas => {
                 const link = document.createElement('a');
@@ -284,4 +309,4 @@
 </script>
 </body>
         </html>
-        
+    
