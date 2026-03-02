@@ -78,7 +78,7 @@
         <p style="color:var(--sub-text); margin-bottom: 30px;">Authorized Access Only.</p>
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
-        <button class="pill-btn" style="width: 100%;" onclick="handleLogin()">Continue</button>
+        <button class="pill-btn" id="login-btn" style="width: 100%;" onclick="handleLogin()">Continue</button>
     </div>
 </div>
 
@@ -132,7 +132,9 @@
 
 <script>
     const SB_URL = 'https://zadmfqghxtbgimbnguql.supabase.co';
-    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mfWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
+    // NEW ANON KEY APPLIED
+    const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZG1mcWdoeHRiZ2ltYm5ndXFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNjgwNjUsImV4cCI6MjA4Nzk0NDA2NX0.PbWZgUoRJrnVurm9djTXotfJxBQ-jyGT11i_61F8Cm4';
+    
     const supabaseClient = supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true } });
 
     let currentUser = null;
@@ -144,12 +146,23 @@
     }
 
     async function handleLogin() {
+        const btn = document.getElementById('login-btn');
+        btn.innerText = "Checking...";
+        btn.disabled = true;
+
         const { data, error } = await supabaseClient.auth.signInWithPassword({
             email: document.getElementById('login-email').value,
             password: document.getElementById('login-pass').value
         });
-        if (error) alert(error.message);
-        else { currentUser = data.user; showApp(); }
+        
+        if (error) {
+            alert(error.message);
+            btn.innerText = "Continue";
+            btn.disabled = false;
+        } else { 
+            currentUser = data.user; 
+            showApp(); 
+        }
     }
 
     function showApp() {
@@ -169,7 +182,6 @@
         document.getElementById('items-input-list').appendChild(div);
     }
 
-    // --- FIXED VERIFY FUNCTION ---
     async function verifyCoupon() {
         const code = document.getElementById('in-coupon').value.trim();
         const subtotal = parseFloat(document.getElementById('out-sub').innerText);
@@ -177,40 +189,29 @@
         if (!code) return;
         
         verifyBtn.innerText = "Checking...";
+        verifyBtn.disabled = true;
         
-        // Use .ilike for case-insensitivity and remove .single() to avoid crash on empty results
         const { data, error } = await supabaseClient
             .from('coupons')
             .select('*')
             .ilike('code', code);
 
         if (error) {
-            console.error("Supabase Error:", error);
-            alert("Connection error. Check console.");
-            verifyBtn.innerText = "Apply";
-            return;
-        }
-
-        const coupon = data[0]; // Get first match
-
-        if (!coupon) { 
-            alert("❌ Coupon not found."); 
-            resetCoupon(); 
-        }
-        else if (!coupon.is_active) { 
-            alert("🚫 Disabled."); 
-            resetCoupon(); 
-        }
-        else if (subtotal < coupon.min_spend) { 
-            alert(`💰 Min spend ৳${coupon.min_spend}`); 
-            resetCoupon(); 
-        }
-        else { 
-            document.getElementById('in-discount').value = coupon.discount_percent; 
-            updateReceipt(); 
-            alert(`✅ Success! ${coupon.discount_percent}% off`);
+            console.error(error);
+            alert("Connection error. Ensure RLS is fixed in SQL Editor.");
+        } else {
+            const coupon = data[0];
+            if (!coupon) { alert("❌ Coupon not found."); resetCoupon(); }
+            else if (!coupon.is_active) { alert("🚫 Disabled."); resetCoupon(); }
+            else if (subtotal < coupon.min_spend) { alert(`💰 Min spend ৳${coupon.min_spend}`); resetCoupon(); }
+            else { 
+                document.getElementById('in-discount').value = coupon.discount_percent; 
+                updateReceipt(); 
+                alert(`✅ Success! ${coupon.discount_percent}% off`);
+            }
         }
         verifyBtn.innerText = "Apply";
+        verifyBtn.disabled = false;
     }
 
     function resetCoupon() { document.getElementById('in-discount').value = 0; updateReceipt(); }
@@ -246,6 +247,7 @@
         document.querySelectorAll('.in-name').forEach((n, i) => {
             if(n.value) itemsData.push({ name: n.value, price: document.querySelectorAll('.in-price')[i].value, qty: document.querySelectorAll('.in-qty')[i].value });
         });
+        
         const { data, error } = await supabaseClient.from('receipts').insert([{
             worker_id: currentUser.id,
             customer_name: document.getElementById('cust-name').value || "Cash Sale",
@@ -255,8 +257,12 @@
             discount_percent: parseFloat(document.getElementById('in-discount').value),
             final_total: parseFloat(document.getElementById('out-total').innerText)
         }]).select();
-        if (error) { alert("Error: " + error.message); saveBtn.disabled = false; }
-        else {
+
+        if (error) { 
+            alert("Error: " + error.message); 
+            saveBtn.disabled = false; 
+            saveBtn.innerText = "Save & Download PNG";
+        } else {
             document.getElementById('gen-id').innerText = data[0].id.substring(0,8);
             html2canvas(document.getElementById('receipt-to-snap'), { scale: 3 }).then(canvas => {
                 const link = document.createElement('a');
@@ -278,4 +284,4 @@
 </script>
 </body>
         </html>
-    
+        
